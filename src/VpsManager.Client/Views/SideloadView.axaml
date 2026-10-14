@@ -1,0 +1,44 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:VpsManager.Client.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="500"
+             x:Class="VpsManager.Client.Views.SideloadView"
+             x:DataType="vm:SideloadViewModel">
+
+    <StackPanel Spacing="16" MaxWidth="600" HorizontalAlignment="Left">
+        <StackPanel Spacing="4" Margin="0,0,0,12">
+            <TextBlock Text="📦 Offline Docker Image Sideloading" FontSize="20" FontWeight="Bold"
+                       Foreground="{DynamicResource TextPrimaryBrush}"/>
+            <TextBlock Text="Transfer locally saved Docker image tarballs over SCP directly to the VPS."
+                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+        </StackPanel>
+
+        <Border Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource DividerBrush}"
+                BorderThickness="1" CornerRadius="8" Padding="20">
+            <StackPanel Spacing="16">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Local Image Tar Archive Path:"
+                               Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    <TextBox Text="{Binding LocalTarPath}" PlaceholderText="e.g. C:\docker_images\my_app.tar"/>
+                </StackPanel>
+
+                <Button Content="📦 Start Sideloading Image"
+                        Command="{Binding StartSideloadCommand}"
+                        Classes="action-btn"
+                        Background="{DynamicResource AccentStrongBrush}" Foreground="White"
+                        Padding="16,10"/>
+
+                <ProgressBar Value="{Binding TransferProgress}" Minimum="0" Maximum="100" Height="6"
+                             Foreground="{DynamicResource AccentBrush}"/>
+            </StackPanel>
+        </Border>
+
+        <Border Background="{DynamicResource LogSurfaceBrush}" BorderBrush="{DynamicResource DividerBrush}"
+                BorderThickness="1" CornerRadius="4" Padding="10">
+            <TextBlock Text="{Binding StatusMessage}" Foreground="{DynamicResource LogTextBrush}"
+                       FontFamily="Consolas, Monospace"/>
+        </Border>
+    </StackPanel>
+</UserControl>

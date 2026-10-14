@@ -1,0 +1,703 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:VpsManager.Client.ViewModels"
+             xmlns:model="using:VpsManager.Core.Models"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="850"
+             x:Class="VpsManager.Client.Views.DockerView"
+             x:DataType="vm:DockerViewModel"
+             x:Name="Root"
+             Background="{DynamicResource AppSurfaceBrush}">
+
+    <UserControl.Styles>
+        <!-- Scope switcher pills -->
+        <Style Selector="RadioButton.scope-pill">
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="RadioButton.scope-pill:checked">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+
+        <!-- Container Card Styles -->
+        <Style Selector="Border.container-card">
+            <Setter Property="Background" Value="{DynamicResource PanelRaisedBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="14,10"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Border.container-card:pointerover">
+            <Setter Property="BorderBrush" Value="{DynamicResource DividerHighlightBrush}"/>
+        </Style>
+        <Style Selector="ListBoxItem:selected Border.container-card">
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
+        </Style>
+        <Style Selector="ListBoxItem">
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+        <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+
+        <!-- State Badges -->
+        <Style Selector="Border.state-badge">
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="6,1"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="Border.state-badge.running">
+            <Setter Property="Background" Value="{DynamicResource SuccessSurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SuccessBorderBrush}"/>
+        </Style>
+        <Style Selector="Border.state-badge.running TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+        </Style>
+        <Style Selector="Border.state-badge.exited">
+            <Setter Property="Background" Value="{DynamicResource DangerSurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DangerBorderBrush}"/>
+        </Style>
+        <Style Selector="Border.state-badge.exited TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource DangerBrush}"/>
+        </Style>
+        <Style Selector="Border.state-badge.paused">
+            <Setter Property="Background" Value="{DynamicResource WarningSurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource WarningBorderBrush}"/>
+        </Style>
+        <Style Selector="Border.state-badge.paused TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
+        </Style>
+        <Style Selector="Border.state-badge.restarting">
+            <Setter Property="Background" Value="{DynamicResource InfoSurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource InfoBorderBrush}"/>
+        </Style>
+        <Style Selector="Border.state-badge.restarting TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource InfoBrush}"/>
+        </Style>
+        <!-- Connection & Daemon State Color Styles -->
+        <Style Selector="TextBlock.connected">
+            <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+        </Style>
+        <Style Selector="TextBlock.warning">
+            <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
+        </Style>
+        <Style Selector="TextBlock.disconnected">
+            <Setter Property="Foreground" Value="{DynamicResource DangerBrush}"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="Auto, Auto, *, Auto" Margin="20,16,20,14" RowSpacing="12" ClipToBounds="True">
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             ROW 0: Top Header & Stack Control Strip (Responsive 2-Line Layout)
+             ═══════════════════════════════════════════════════════════════════ -->
+        <Grid Grid.Row="0" RowDefinitions="Auto, Auto" RowSpacing="10" ClipToBounds="True">
+            <!-- Line 1: Title, Badges, and Status Indicator -->
+            <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto" VerticalAlignment="Center">
+                <!-- Left: Title + Target Profile + Connection Indicator -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                    <TextBlock Text="Docker Workstation" FontSize="20" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+
+                    <!-- Target Profile Badge -->
+                    <Border Background="{DynamicResource PanelRaisedBrush}" BorderBrush="{DynamicResource DividerBrush}"
+                            BorderThickness="1" CornerRadius="6" Padding="8,4" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <TextBlock Text="Target:" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBlock Text="{Binding ProfileName}" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource AccentTeal}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Live SSH / Connection Status Badge -->
+                    <Border Background="{DynamicResource PanelRaisedBrush}" BorderBrush="{DynamicResource DividerBrush}"
+                            BorderThickness="1" CornerRadius="6" Padding="8,4" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <Ellipse Width="7" Height="7" Fill="{DynamicResource SuccessBrush}" IsVisible="{Binding IsDaemonConnected}" VerticalAlignment="Center"/>
+                            <Ellipse Width="7" Height="7" Fill="{DynamicResource WarningBrush}" IsVisible="{Binding IsDaemonOffline}" VerticalAlignment="Center"/>
+                            <Ellipse Width="7" Height="7" Fill="{DynamicResource DangerBrush}" IsVisible="{Binding IsSshDisconnected}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding ConnectionStatusText}" FontSize="10" FontWeight="SemiBold"
+                                       Classes.connected="{Binding IsDaemonConnected}"
+                                       Classes.warning="{Binding IsDaemonOffline}"
+                                       Classes.disconnected="{Binding IsSshDisconnected}"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Right: Status Message and Progress Bar -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding StatusMessage}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
+                               VerticalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="350"/>
+                    <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}" Width="60" Height="4"
+                                 Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- Line 2: Scope Switcher Pills (Left) and Action Buttons (Right) Aligned in ONE Row -->
+            <Grid Grid.Row="1" ColumnDefinitions="Auto, *, Auto" VerticalAlignment="Center">
+                <!-- Scope Switcher Pills -->
+                <Border Grid.Column="0" Background="{DynamicResource PanelRaisedBrush}" CornerRadius="6" Padding="3"
+                        BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
+                        <RadioButton Classes="scope-pill"
+                                     Content="Compose Stack"
+                                     IsChecked="{Binding IsComposeScope}"
+                                     GroupName="DockerScopeMode"
+                                     ToolTip.Tip="Manage containers defined in docker-compose.yml"/>
+                        <RadioButton Classes="scope-pill"
+                                     Content="All Host Containers"
+                                     IsChecked="{Binding !IsComposeScope}"
+                                     GroupName="DockerScopeMode"
+                                     ToolTip.Tip="View and manage all standalone containers running on the host"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Action Buttons Aligned in ONE Row on the Right -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <!-- Stack Up Button -->
+                    <Button Classes="pill-btn" Command="{Binding ExecuteStackActionCommand}" CommandParameter="Up"
+                            IsVisible="{Binding IsComposeScope}"
+                            IsEnabled="{Binding !IsBusy}" ToolTip.Tip="Bring up or rebuild project stack (docker compose up -d)"
+                            VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                            <ic:SymbolIcon Symbol="Play" FontSize="12" VerticalAlignment="Center"/>
+                            <TextBlock Text="Start Stack" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Stack Restart Button -->
+                    <Button Classes="pill-btn" Command="{Binding ExecuteStackActionCommand}" CommandParameter="Restart"
+                            IsVisible="{Binding IsComposeScope}"
+                            IsEnabled="{Binding !IsBusy}" ToolTip.Tip="Restart all containers in project stack"
+                            VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                            <ic:SymbolIcon Symbol="ArrowCounterclockwise" FontSize="12" VerticalAlignment="Center"/>
+                            <TextBlock Text="Restart Stack" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Stack Down Button -->
+                    <Button Classes="pill-btn danger" Command="{Binding ExecuteStackActionCommand}" CommandParameter="Down"
+                            IsVisible="{Binding IsComposeScope}"
+                            IsEnabled="{Binding !IsBusy}" ToolTip.Tip="Stop and remove project containers and networks"
+                            VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                            <ic:SymbolIcon Symbol="Stop" FontSize="12" VerticalAlignment="Center"/>
+                            <TextBlock Text="Stop Stack" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Rebuild Button -->
+                    <Button Classes="pill-btn" Command="{Binding ExecuteStackActionCommand}" CommandParameter="Build"
+                            IsVisible="{Binding IsComposeScope}"
+                            IsEnabled="{Binding !IsBusy}" ToolTip.Tip="Rebuild project container images (docker compose build)"
+                            VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                            <ic:SymbolIcon Symbol="Wrench" FontSize="12" VerticalAlignment="Center"/>
+                            <TextBlock Text="Rebuild" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Primary Refresh Button -->
+                    <Button Classes="action-btn" Command="{Binding RefreshContainersCommand}"
+                            IsEnabled="{Binding !IsBusy}" Background="{DynamicResource AccentStrongBrush}"
+                            Foreground="{DynamicResource TextWhiteBrush}" ToolTip.Tip="Refresh container inventory and live stats"
+                            VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <ic:SymbolIcon Symbol="ArrowSync" FontSize="13" VerticalAlignment="Center"/>
+                            <TextBlock Text="Refresh" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Grid>
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             ROW 1: 3-Column Datacenter Telemetry & Health Cards
+             ═══════════════════════════════════════════════════════════════════ -->
+        <Grid Grid.Row="1" ColumnDefinitions="*, *, *" ColumnSpacing="12" ClipToBounds="True">
+
+            <!-- Card 1: Docker Engine & Daemon Telemetry -->
+            <Border Grid.Column="0" Classes="stat-card" Padding="14" ClipToBounds="True">
+                <Grid RowDefinitions="Auto, Auto, *, Auto" RowSpacing="6">
+                    <Grid Grid.Row="0" ColumnDefinitions="Auto, Auto, *" ColumnSpacing="6">
+                        <ic:SymbolIcon Symbol="Cube" FontSize="14" Foreground="{DynamicResource AccentTeal}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="DOCKER ENGINE &amp; DAEMON" FontSize="10" FontWeight="Bold" LetterSpacing="0.5"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                        <Border Grid.Column="2" Background="{DynamicResource MetricBadgeBackgroundBrush}"
+                                BorderBrush="{DynamicResource MetricBadgeBorderBrush}" BorderThickness="1"
+                                CornerRadius="4" Padding="6,1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding DaemonVersion, StringFormat='Docker {0}'}" FontSize="10"
+                                       Foreground="{DynamicResource AccentTeal}" FontWeight="SemiBold"/>
+                        </Border>
+                    </Grid>
+
+                    <Grid Grid.Row="1" ColumnDefinitions="*, Auto" ColumnSpacing="8" VerticalAlignment="Center" Margin="0,2">
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <Ellipse Width="8" Height="8" Fill="{DynamicResource SuccessBrush}" IsVisible="{Binding IsDaemonConnected}" VerticalAlignment="Center"/>
+                            <Ellipse Width="8" Height="8" Fill="{DynamicResource WarningBrush}" IsVisible="{Binding IsDaemonOffline}" VerticalAlignment="Center"/>
+                            <Ellipse Width="8" Height="8" Fill="{DynamicResource DangerBrush}" IsVisible="{Binding IsSshDisconnected}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding DaemonStatusHeadline}" FontSize="15" FontWeight="Bold"
+                                       Classes.connected="{Binding IsDaemonConnected}"
+                                       Classes.warning="{Binding IsDaemonOffline}"
+                                       Classes.disconnected="{Binding IsSshDisconnected}"
+                                       TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <Border Grid.Column="1" Background="{DynamicResource MetricBadgeBackgroundBrush}"
+                                BorderBrush="{DynamicResource MetricBadgeBorderBrush}" BorderThickness="1"
+                                CornerRadius="6" Padding="6,2" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding ImagesCount, StringFormat='{}{0} Images'}"
+                                       FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource AccentTeal}"/>
+                        </Border>
+                    </Grid>
+
+                    <!-- OS & Driver Details -->
+                    <Border Grid.Row="2" Background="{DynamicResource PanelBrush}" CornerRadius="6" Padding="8,5" Margin="0,2">
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="{Binding OperatingSystem, StringFormat='Host OS: {0}', FallbackValue='Host: Linux 64-bit'}" FontSize="10"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Text="Engine Socket: /var/run/docker.sock" FontSize="10"
+                                       Foreground="{DynamicResource TextMutedBrush}" FontFamily="Cascadia Mono, Consolas, Monospace"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Grid Grid.Row="3" ColumnDefinitions="*, Auto">
+                        <TextBlock Text="Docker Daemon Health" FontSize="10"
+                                   Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{Binding DaemonHealthText}" FontSize="10" FontWeight="Bold"
+                                   Classes.connected="{Binding IsDaemonConnected}"
+                                   Classes.warning="{Binding IsDaemonOffline}"
+                                   Classes.disconnected="{Binding IsSshDisconnected}"
+                                   VerticalAlignment="Center"/>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- Card 2: Orchestration Stack & Project -->
+            <Border Grid.Column="1" Classes="stat-card" Padding="14" ClipToBounds="True">
+                <Grid RowDefinitions="Auto, Auto, *, Auto" RowSpacing="6">
+                    <Grid Grid.Row="0" ColumnDefinitions="Auto, Auto, *" ColumnSpacing="6">
+                        <ic:SymbolIcon Symbol="Folder" FontSize="14" Foreground="{DynamicResource MetricCpuWaveBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="ORCHESTRATION CONTEXT" FontSize="10" FontWeight="Bold" LetterSpacing="0.5"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                        <Border Grid.Column="2" Background="{DynamicResource MetricBadgeBackgroundBrush}"
+                                BorderBrush="{DynamicResource MetricBadgeBorderBrush}" BorderThickness="1"
+                                CornerRadius="4" Padding="6,1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding IsComposeScope, Converter={x:Null}, FallbackValue='Stack Scoped'}" FontSize="10"
+                                       Foreground="{DynamicResource MetricCpuWaveBrush}" FontWeight="SemiBold"/>
+                        </Border>
+                    </Grid>
+
+                    <Grid Grid.Row="1" ColumnDefinitions="*, Auto" ColumnSpacing="8" VerticalAlignment="Center" Margin="0,2">
+                        <TextBlock Text="{Binding ComposeFileName}" FontSize="14" FontWeight="Bold"
+                                   FontFamily="Cascadia Mono, Consolas, Monospace"
+                                   ToolTip.Tip="{Binding ComposeFileName}"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+                        <Border Grid.Column="1" Background="{DynamicResource MetricBadgeBackgroundBrush}"
+                                BorderBrush="{DynamicResource MetricBadgeBorderBrush}" BorderThickness="1"
+                                CornerRadius="6" Padding="6,2" VerticalAlignment="Center">
+                            <TextBlock Text="Compose V2" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource MetricCpuWaveBrush}"/>
+                        </Border>
+                    </Grid>
+
+                    <Border Grid.Row="2" Background="{DynamicResource PanelBrush}" CornerRadius="6" Padding="8,5" Margin="0,2">
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="{Binding StackStatusSummary, StringFormat='Workload State: {0}'}" FontSize="10"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Text="{Binding TotalContainersCount, StringFormat='Discovered Containers: {0}'}" FontSize="10"
+                                       Foreground="{DynamicResource AccentTeal}" TextTrimming="CharacterEllipsis"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Grid Grid.Row="3" ColumnDefinitions="*, Auto">
+                        <TextBlock Text="Target Profile Context" FontSize="10"
+                                   Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="Synced" FontSize="10" FontWeight="Bold"
+                                   Foreground="{DynamicResource MetricCpuWaveBrush}" VerticalAlignment="Center"/>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- Card 3: Workload Container Health -->
+            <Border Grid.Column="2" Classes="stat-card" Padding="14" ClipToBounds="True">
+                <Grid RowDefinitions="Auto, Auto, *, Auto" RowSpacing="6">
+                    <Grid Grid.Row="0" ColumnDefinitions="Auto, Auto, *" ColumnSpacing="6">
+                        <ic:SymbolIcon Symbol="HeartPulse" FontSize="14" Foreground="{DynamicResource MetricDiskOrchidBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="CONTAINER WORKLOAD HEALTH" FontSize="10" FontWeight="Bold" LetterSpacing="0.5"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                        <Border Grid.Column="2" Background="{DynamicResource MetricBadgeBackgroundBrush}"
+                                BorderBrush="{DynamicResource MetricBadgeBorderBrush}" BorderThickness="1"
+                                CornerRadius="4" Padding="6,1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding TotalContainersCount, StringFormat='{}{0} Total'}" FontSize="10" FontWeight="Bold"
+                                       Foreground="{DynamicResource AccentTeal}"/>
+                        </Border>
+                    </Grid>
+
+                    <Grid Grid.Row="1" ColumnDefinitions="*, Auto" ColumnSpacing="8" VerticalAlignment="Center" Margin="0,2">
+                        <TextBlock Text="{Binding RunningCount, StringFormat='{}{0} Running'}" FontSize="16" FontWeight="Bold"
+                                   Foreground="{DynamicResource SuccessBrush}" TextTrimming="CharacterEllipsis"/>
+                        <Border Grid.Column="1" Background="{DynamicResource MetricBadgeBackgroundBrush}"
+                                BorderBrush="{DynamicResource MetricBadgeBorderBrush}" BorderThickness="1"
+                                CornerRadius="6" Padding="6,2" VerticalAlignment="Center">
+                            <TextBlock Text="docker stats" FontSize="10" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource MetricDiskOrchidBrush}"/>
+                        </Border>
+                    </Grid>
+
+                    <!-- Breakdown Chips -->
+                    <Border Grid.Row="2" Background="{DynamicResource PanelBrush}" CornerRadius="6" Padding="8,5" Margin="0,2">
+                        <WrapPanel Orientation="Horizontal">
+                            <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,0,8,0">
+                                <Ellipse Width="7" Height="7" Fill="{DynamicResource SuccessBrush}" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding RunningCount, StringFormat='{}{0} running'}" FontSize="10" Foreground="{DynamicResource SuccessBrush}"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,0,8,0">
+                                <Ellipse Width="7" Height="7" Fill="{DynamicResource WarningBrush}" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding PausedCount, StringFormat='{}{0} paused'}" FontSize="10" Foreground="{DynamicResource WarningBrush}"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <Ellipse Width="7" Height="7" Fill="{DynamicResource DangerBrush}" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding StoppedCount, StringFormat='{}{0} stopped'}" FontSize="10" Foreground="{DynamicResource DangerBrush}"/>
+                            </StackPanel>
+                        </WrapPanel>
+                    </Border>
+
+                    <Grid Grid.Row="3" ColumnDefinitions="*, Auto">
+                        <TextBlock Text="Automated Health Monitoring" FontSize="10"
+                                   Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="Live Monitored" FontSize="10" FontWeight="Bold"
+                                   Foreground="{DynamicResource MetricDiskOrchidBrush}" VerticalAlignment="Center"/>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             ROW 2: Dual-Pane Workspace (Containers List Left, Logs Right)
+             ═══════════════════════════════════════════════════════════════════ -->
+        <Grid Grid.Row="2" ColumnDefinitions="1.2*, *" ColumnSpacing="12" ClipToBounds="True">
+
+            <!-- LEFT COLUMN: Container Services List -->
+            <Border Grid.Column="0" Classes="stat-card" Padding="0" ClipToBounds="True">
+                <Grid RowDefinitions="Auto, Auto, *">
+
+                    <!-- Header -->
+                    <Border Grid.Row="0" Background="{DynamicResource PanelRaisedBrush}" Padding="12,8"
+                            BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1">
+                        <Grid ColumnDefinitions="Auto, Auto, *, Auto" ColumnSpacing="6">
+                            <ic:SymbolIcon Symbol="Apps" FontSize="14" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="CONTAINER SERVICES" Foreground="{DynamicResource TextPrimaryBrush}"
+                                       FontSize="10" FontWeight="Bold" LetterSpacing="0.5" VerticalAlignment="Center"/>
+
+                            <TextBlock Grid.Column="2" Text="{Binding FilteredContainers.Count, StringFormat='{}{0} items'}"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" VerticalAlignment="Center"/>
+
+                            <!-- Quick Refresh icon button -->
+                            <Button Grid.Column="3" Classes="pill-btn" Command="{Binding RefreshContainersCommand}"
+                                    IsEnabled="{Binding !IsBusy}" ToolTip.Tip="Refresh container list" Padding="6,3">
+                                <ic:SymbolIcon Symbol="ArrowSync" FontSize="11"/>
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <!-- Filter / Search Box -->
+                    <Border Grid.Row="1" Background="{DynamicResource PanelBrush}" Padding="8,6"
+                            BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1">
+                        <Grid ColumnDefinitions="24, *">
+                            <ic:SymbolIcon Grid.Column="0" Symbol="Search" FontSize="12"
+                                           Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                            <TextBox Grid.Column="1"
+                                     Text="{Binding SearchQuery}"
+                                     PlaceholderText="Filter containers by name, image, port, or state..."
+                                     FontSize="11"
+                                     Background="Transparent"
+                                     BorderThickness="0"
+                                     CaretBrush="{DynamicResource AccentBrush}"
+                                     Padding="4,2"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Containers List / Empty State -->
+                    <Grid Grid.Row="2">
+                        <!-- Empty State -->
+                        <StackPanel IsVisible="{Binding !HasContainers}"
+                                    HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10" Margin="24">
+                            <ic:SymbolIcon Symbol="Cube" FontSize="36" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
+                            <TextBlock Text="No Containers Discovered" FontSize="14" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center"/>
+                            <TextBlock Text="No containers match the current filter or scope. Verify that services are running on the VPS."
+                                       FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
+                                       TextAlignment="Center" MaxWidth="320"/>
+                            <Button Classes="pill-btn" Command="{Binding RefreshContainersCommand}" Content="Refresh Services"
+                                    HorizontalAlignment="Center" Margin="0,6,0,0"/>
+                        </StackPanel>
+
+                        <!-- Container Cards List -->
+                        <ScrollViewer IsVisible="{Binding HasContainers}" VerticalScrollBarVisibility="Auto" Padding="8">
+                            <ListBox ItemsSource="{Binding FilteredContainers}"
+                                     SelectedItem="{Binding SelectedContainer}"
+                                     Background="Transparent">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate x:DataType="model:ContainerInfo">
+                                        <Border Classes="container-card">
+                                            <Grid RowDefinitions="Auto, Auto, Auto" RowSpacing="6">
+
+                                                <!-- Row 0: Name, ShortId, State Badge -->
+                                                <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto" ColumnSpacing="8" VerticalAlignment="Center">
+                                                    <!-- State dot -->
+                                                    <Ellipse Width="8" Height="8" VerticalAlignment="Center"
+                                                             Fill="{DynamicResource SuccessBrush}" IsVisible="{Binding IsRunning}"/>
+                                                    <Ellipse Width="8" Height="8" VerticalAlignment="Center"
+                                                             Fill="{DynamicResource DangerBrush}" IsVisible="{Binding IsExited}"/>
+                                                    <Ellipse Width="8" Height="8" VerticalAlignment="Center"
+                                                             Fill="{DynamicResource WarningBrush}" IsVisible="{Binding IsPaused}"/>
+                                                    <Ellipse Width="8" Height="8" VerticalAlignment="Center"
+                                                             Fill="{DynamicResource InfoBrush}" IsVisible="{Binding IsRestarting}"/>
+
+                                                    <!-- Container Name & ID -->
+                                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding Names}" FontWeight="Bold" FontSize="13"
+                                                                   Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+                                                        <TextBlock Text="{Binding ShortId}" FontSize="10"
+                                                                   Foreground="{DynamicResource TextMutedBrush}"
+                                                                   FontFamily="Cascadia Mono, Consolas, Monospace" VerticalAlignment="Center"/>
+                                                    </StackPanel>
+
+                                                    <!-- State Badge -->
+                                                    <Border Grid.Column="2" Classes="state-badge"
+                                                            Classes.running="{Binding IsRunning}"
+                                                            Classes.exited="{Binding IsExited}"
+                                                            Classes.paused="{Binding IsPaused}"
+                                                            Classes.restarting="{Binding IsRestarting}">
+                                                        <TextBlock Text="{Binding StatusBadgeText}" FontSize="9" FontWeight="Bold"/>
+                                                    </Border>
+                                                </Grid>
+
+                                                <!-- Row 1: Image & Ports & Resource Telemetry -->
+                                                <Grid Grid.Row="1" ColumnDefinitions="*, Auto" ColumnSpacing="8" VerticalAlignment="Center">
+                                                    <StackPanel Spacing="3">
+                                                        <!-- Image Tag -->
+                                                        <StackPanel Orientation="Horizontal" Spacing="5">
+                                                            <ic:SymbolIcon Symbol="Tag" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                                                            <TextBlock Text="{Binding Image}" Foreground="{DynamicResource TextSecondaryBrush}"
+                                                                       FontSize="11" TextTrimming="CharacterEllipsis"/>
+                                                        </StackPanel>
+
+                                                        <!-- Ports Binding -->
+                                                        <StackPanel Orientation="Horizontal" Spacing="5" IsVisible="{Binding HasPorts}">
+                                                            <ic:SymbolIcon Symbol="Globe" FontSize="11" Foreground="{DynamicResource AccentTeal}" VerticalAlignment="Center"/>
+                                                            <TextBlock Text="{Binding Ports}" Foreground="{DynamicResource AccentTeal}"
+                                                                       FontSize="10" FontFamily="Cascadia Mono, Consolas, Monospace"
+                                                                       TextTrimming="CharacterEllipsis"/>
+                                                        </StackPanel>
+                                                    </StackPanel>
+
+                                                    <!-- CPU & RAM Resource Badges -->
+                                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" IsVisible="{Binding HasMetrics}">
+                                                        <!-- CPU Usage -->
+                                                        <Border Background="{DynamicResource MetricBadgeBackgroundBrush}"
+                                                                BorderBrush="{DynamicResource MetricBadgeBorderBrush}" BorderThickness="1"
+                                                                CornerRadius="4" Padding="6,2" VerticalAlignment="Center">
+                                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                                <TextBlock Text="CPU" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource MetricCpuWaveBrush}"/>
+                                                                <TextBlock Text="{Binding CpuPercentage}" FontSize="10" FontFamily="Cascadia Mono, Consolas, Monospace"
+                                                                           Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                                            </StackPanel>
+                                                        </Border>
+
+                                                        <!-- RAM Usage -->
+                                                        <Border Background="{DynamicResource MetricBadgeBackgroundBrush}"
+                                                                BorderBrush="{DynamicResource MetricBadgeBorderBrush}" BorderThickness="1"
+                                                                CornerRadius="4" Padding="6,2" VerticalAlignment="Center">
+                                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                                <TextBlock Text="RAM" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource MetricRamActiveBrush}"/>
+                                                                <TextBlock Text="{Binding MemoryUsage}" FontSize="10" FontFamily="Cascadia Mono, Consolas, Monospace"
+                                                                           Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                                            </StackPanel>
+                                                        </Border>
+                                                    </StackPanel>
+                                                </Grid>
+
+                                                <!-- Row 2: Status Text & Action Buttons -->
+                                                <Grid Grid.Row="2" ColumnDefinitions="*, Auto" ColumnSpacing="8" VerticalAlignment="Center" Margin="0,2,0,0">
+                                                    <TextBlock Text="{Binding Status}" Foreground="{DynamicResource TextMutedBrush}"
+                                                               FontSize="10" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+
+                                                    <!-- Container Action Buttons -->
+                                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                                                        <!-- Start Button -->
+                                                        <Button Classes="pill-btn"
+                                                                Command="{Binding #Root.((vm:DockerViewModel)DataContext).StartContainerCommand}"
+                                                                CommandParameter="{Binding}"
+                                                                IsVisible="{Binding CanStart}"
+                                                                ToolTip.Tip="Start container"
+                                                                Padding="6,3">
+                                                            <StackPanel Orientation="Horizontal" Spacing="3">
+                                                                <ic:SymbolIcon Symbol="Play" FontSize="11" VerticalAlignment="Center"/>
+                                                                <TextBlock Text="Start" FontSize="10" VerticalAlignment="Center"/>
+                                                            </StackPanel>
+                                                        </Button>
+
+                                                        <!-- Restart Button -->
+                                                        <Button Classes="pill-btn"
+                                                                Command="{Binding #Root.((vm:DockerViewModel)DataContext).RestartContainerCommand}"
+                                                                CommandParameter="{Binding}"
+                                                                ToolTip.Tip="Restart container"
+                                                                Padding="6,3">
+                                                            <StackPanel Orientation="Horizontal" Spacing="3">
+                                                                <ic:SymbolIcon Symbol="ArrowCounterclockwise" FontSize="11" VerticalAlignment="Center"/>
+                                                                <TextBlock Text="Restart" FontSize="10" VerticalAlignment="Center"/>
+                                                            </StackPanel>
+                                                        </Button>
+
+                                                        <!-- Stop Button -->
+                                                        <Button Classes="pill-btn danger"
+                                                                Command="{Binding #Root.((vm:DockerViewModel)DataContext).StopContainerCommand}"
+                                                                CommandParameter="{Binding}"
+                                                                IsVisible="{Binding CanStop}"
+                                                                ToolTip.Tip="Stop container cleanly"
+                                                                Padding="6,3">
+                                                            <StackPanel Orientation="Horizontal" Spacing="3">
+                                                                <ic:SymbolIcon Symbol="Stop" FontSize="11" VerticalAlignment="Center"/>
+                                                                <TextBlock Text="Stop" FontSize="10" VerticalAlignment="Center"/>
+                                                            </StackPanel>
+                                                        </Button>
+                                                    </StackPanel>
+                                                </Grid>
+
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </ScrollViewer>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- RIGHT COLUMN: Live Container Log Console -->
+            <Border Grid.Column="1" Classes="stat-card" Padding="0" ClipToBounds="True">
+                <Grid RowDefinitions="Auto, Auto, *">
+
+                    <!-- Console Header -->
+                    <Border Grid.Row="0" Background="{DynamicResource PanelRaisedBrush}" Padding="12,8"
+                            BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1">
+                        <Grid ColumnDefinitions="Auto, Auto, *, Auto" ColumnSpacing="8">
+                            <ic:SymbolIcon Symbol="DeveloperBoard" FontSize="14" Foreground="{DynamicResource AccentTeal}" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="CONTAINER LOG STREAMER" Foreground="{DynamicResource TextPrimaryBrush}"
+                                       FontSize="10" FontWeight="Bold" LetterSpacing="0.5" VerticalAlignment="Center"/>
+
+                            <!-- Active Container Badge -->
+                            <TextBlock Grid.Column="2"
+                                       Text="{Binding SelectedContainer.Names, FallbackValue='Select a container to stream logs'}"
+                                       Foreground="{DynamicResource AccentTeal}" FontSize="10"
+                                       FontFamily="Cascadia Mono, Consolas, Monospace"
+                                       TextTrimming="CharacterEllipsis" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+                            <Button Grid.Column="3" Classes="pill-btn" Content="Clear" Command="{Binding ClearLogsCommand}"
+                                    Padding="8,2" FontSize="10" VerticalAlignment="Center"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Log Streamer Toolbar -->
+                    <Border Grid.Row="1" Background="{DynamicResource PanelBrush}" Padding="10,6"
+                            BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1">
+                        <Grid ColumnDefinitions="Auto, Auto, *, Auto, Auto" ColumnSpacing="8" VerticalAlignment="Center">
+                            <!-- Lines Selector -->
+                            <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                <TextBlock Text="Tail:" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                                <ComboBox ItemsSource="{Binding AvailableLineCounts}"
+                                          SelectedItem="{Binding LogLineCount}"
+                                          FontSize="10" Height="26" MinHeight="26" Padding="6,2" VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <!-- Include Timestamps -->
+                            <CheckBox Grid.Column="1" Content="Timestamps (-t)"
+                                      IsChecked="{Binding IncludeTimestamps}"
+                                      FontSize="10" Padding="4,0" VerticalAlignment="Center"/>
+
+                            <!-- Auto-Refresh Toggle -->
+                            <CheckBox Grid.Column="3" Content="Live Stream (3s)"
+                                      IsChecked="{Binding IsAutoRefreshLogs}"
+                                      FontSize="10" Padding="4,0" VerticalAlignment="Center"/>
+
+                            <!-- Fetch Now Button -->
+                            <Button Grid.Column="4" Classes="pill-btn" Command="{Binding FetchLogsCommand}"
+                                    ToolTip.Tip="Fetch latest logs immediately" Padding="8,3">
+                                <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                    <ic:SymbolIcon Symbol="ArrowDownload" FontSize="11" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Fetch" FontSize="10" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <!-- Console Terminal Output Window -->
+                    <Border Grid.Row="2" Background="{DynamicResource LogSurfaceBrush}" Padding="12">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                            <SelectableTextBlock Text="{Binding ContainerLogs}"
+                                                 FontFamily="Cascadia Mono, Consolas, Courier New, Monospace"
+                                                 FontSize="11"
+                                                 Foreground="{DynamicResource LogTextBrush}"
+                                                 TextWrapping="Wrap"/>
+                        </ScrollViewer>
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             ROW 3: Bottom Status Strip
+             ═══════════════════════════════════════════════════════════════════ -->
+        <Border Grid.Row="3" Background="{DynamicResource PanelBrush}"
+                BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0"
+                Padding="14,6">
+            <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="10">
+                <!-- Busy indicator -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6"
+                            IsVisible="{Binding IsBusy}" VerticalAlignment="Center">
+                    <Border Width="8" Height="8" CornerRadius="4" Background="{DynamicResource AccentBrush}"/>
+                    <TextBlock Text="Executing..." FontSize="11" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Status message -->
+                <TextBlock Grid.Column="1" Text="{Binding StatusMessage}"
+                           Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11"
+                           FontFamily="Cascadia Mono, Consolas, Monospace"
+                           VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+
+                <!-- Container Counts Summary -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <TextBlock FontSize="11" FontFamily="Cascadia Mono, Consolas, Monospace"
+                               Foreground="{DynamicResource AccentTeal}" VerticalAlignment="Center">
+                        <Run Text="{Binding RunningCount}"/>
+                        <Run Text=" running"/>
+                    </TextBlock>
+                    <TextBlock Text="•" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center"/>
+                    <TextBlock FontSize="11" FontFamily="Cascadia Mono, Consolas, Monospace"
+                               Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center">
+                        <Run Text="{Binding TotalContainersCount}"/>
+                        <Run Text=" total"/>
+                    </TextBlock>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+    </Grid>
+</UserControl>

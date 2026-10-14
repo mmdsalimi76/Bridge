@@ -1,4 +1,0 @@
-{
-    "COMPOSE_FILE": "docker-compose.yml",
-    "REMOTE_PROJECT_ROOT": "/opt/project_name"
-}

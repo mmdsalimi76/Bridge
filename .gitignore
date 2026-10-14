@@ -1,0 +1,95 @@
+# ====================================================================
+# Bridge Workstation - Production .gitignore
+# ====================================================================
+
+# -- Build & Publishing Artifacts ------------------------------------
+bin/
+obj/
+dist/
+publish/
+out/
+[Bb]uild/
+
+# -- User-Specific Solution & Project Files --------------------------
+*.user
+*.userosscache
+*.suo
+*.userprefs
+*.sln.docstates
+*.DotSettings.user
+
+# -- IDEs & Editors --------------------------------------------------
+# Visual Studio
+.vs/
+*.vsp
+*.vspx
+*.vspscc
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+
+# Visual Studio Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# -- Test Results & Code Coverage ------------------------------------
+TestResults/
+[Tt]est[Rr]esult*/
+coverage/
+*.trx
+*.coverage
+*.coveragexml
+
+# -- Logs & Diagnostics ----------------------------------------------
+*.log
+_logs/
+crashes/
+CRASH-*.txt
+
+# -- Security & Private Keys (NEVER COMMIT CREDENTIALS) --------------
+*.pem
+*.key
+*.ppk
+*.pfx
+*.p12
+id_rsa
+id_rsa.*
+id_ed25519
+id_ed25519.*
+id_ecdsa
+id_ecdsa.*
+known_hosts
+known_hosts.*
+.env
+.env.*
+*.local.json
+*.private.json
+
+# -- Inno Setup & Packaging Intermediates -----------------------------
+Output/
+_ISCC/
+*.tmp
+
+# -- Operating System Artifacts --------------------------------------
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+.directory
+
+# -- Agent & Local Scratch -------------------------------------------
+.freebuff/
+NUL

@@ -1,0 +1,953 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:VpsManager.Client.ViewModels"
+             xmlns:models="using:VpsManager.Core.Models"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1260" d:DesignHeight="880"
+             x:Class="VpsManager.Client.Views.SettingsView"
+             x:DataType="vm:SettingsViewModel"
+             Background="{DynamicResource AppSurfaceBrush}">
+
+    <UserControl.Styles>
+        <!-- Section Cards -->
+        <Style Selector="Border.section-card">
+            <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="16,14"/>
+            <Setter Property="Margin" Value="0,0,0,12"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Border.section-card:pointerover">
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+        </Style>
+
+        <!-- Form TextBoxes -->
+        <Style Selector="TextBox">
+            <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="10,6"/>
+            <Setter Property="FontSize" Value="11"/>
+        </Style>
+        <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+
+        <!-- Section Navigation Pills -->
+        <Style Selector="Button.section-nav-pill">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="10,4"/>
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.section-nav-pill:pointerover">
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        </Style>
+        <Style Selector="Button.section-nav-pill.active">
+            <Setter Property="Background" Value="{DynamicResource AccentSurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+        </Style>
+
+        <!-- Profile Master List -->
+        <Style Selector="ListBox.profile-list">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+        <Style Selector="ListBox.profile-list > ListBoxItem">
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="Margin" Value="0,0,0,6"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+        </Style>
+        <Style Selector="ListBox.profile-list > ListBoxItem:pointerover">
+            <Setter Property="Background" Value="{DynamicResource PanelRaisedBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        </Style>
+        <Style Selector="ListBox.profile-list > ListBoxItem:selected">
+            <Setter Property="Background" Value="{DynamicResource PanelRaisedBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        </Style>
+
+        <!-- Status Badges -->
+        <Style Selector="Border.status-pill">
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="6,2"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="Border.status-pill.success">
+            <Setter Property="Background" Value="{DynamicResource SuccessSurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SuccessBorderBrush}"/>
+        </Style>
+        <Style Selector="Border.status-pill.success TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+        </Style>
+        <Style Selector="Border.status-pill.warning">
+            <Setter Property="Background" Value="{DynamicResource WarningSurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource WarningBorderBrush}"/>
+        </Style>
+        <Style Selector="Border.status-pill.warning TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
+        </Style>
+        <Style Selector="Border.status-pill.danger">
+            <Setter Property="Background" Value="{DynamicResource DangerSurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DangerBorderBrush}"/>
+        </Style>
+        <Style Selector="Border.status-pill.danger TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource DangerBrush}"/>
+        </Style>
+
+        <!-- Pattern Badges in Sync Ignore -->
+        <Style Selector="Border.pattern-badge">
+            <Setter Property="Background" Value="{DynamicResource PanelRaisedBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="Margin" Value="0,0,6,6"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="Auto, *" Margin="20,16,20,14" RowSpacing="12" ClipToBounds="True">
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             ROW 0: Top Header & Control Strip (Responsive 2-Line Layout)
+             ═══════════════════════════════════════════════════════════════════ -->
+        <Grid Grid.Row="0" RowDefinitions="Auto, Auto" RowSpacing="10" ClipToBounds="True">
+
+            <!-- Line 1: Identity, Target Badge, Active Badge, Dirty State, Status -->
+            <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto" VerticalAlignment="Center">
+
+                <!-- Left: Title + Badges -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                    <TextBlock Text="Environment Settings &amp; Security" FontSize="20" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+
+                    <!-- Selected Profile Badge -->
+                    <Border Background="{DynamicResource PanelRaisedBrush}" BorderBrush="{DynamicResource DividerBrush}"
+                            BorderThickness="1" CornerRadius="6" Padding="8,4" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <TextBlock Text="Profile:" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBlock Text="{Binding SelectedProfile.Name, FallbackValue='No profile'}" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource AccentTeal}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Active Server Context Badge -->
+                    <Border Background="{DynamicResource PanelRaisedBrush}" BorderBrush="{DynamicResource DividerBrush}"
+                            BorderThickness="1" CornerRadius="6" Padding="8,4" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <TextBlock Text="Active Context:" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBlock Text="{Binding ActiveProfileName}" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                            <Border Classes="status-pill success" IsVisible="{Binding IsActiveProfile}" Margin="4,0,0,0">
+                                <TextBlock Text="ACTIVE" FontSize="8" FontWeight="Bold"/>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Live SSH Connection Indicator -->
+                    <Border Background="{DynamicResource PanelRaisedBrush}" BorderBrush="{DynamicResource DividerBrush}"
+                            BorderThickness="1" CornerRadius="6" Padding="8,4" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <Ellipse Width="7" Height="7" Fill="{DynamicResource SuccessBrush}" IsVisible="{Binding IsConnected}" VerticalAlignment="Center"/>
+                            <Ellipse Width="7" Height="7" Fill="{DynamicResource DangerBrush}" IsVisible="{Binding !IsConnected}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding ConnectionStatusText}" FontSize="10" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Unsaved Changes (Dirty) Badge -->
+                    <Border Classes="status-pill warning" IsVisible="{Binding IsDirty}">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <ic:SymbolIcon Symbol="Warning" FontSize="10" VerticalAlignment="Center"/>
+                            <TextBlock Text="Unsaved Changes" FontSize="9" FontWeight="Bold"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Right: Status Message -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding StatusMessage}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
+                               VerticalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="420"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- Line 2: Action Toolbar Strip -->
+            <Grid Grid.Row="1" ColumnDefinitions="Auto, *, Auto" VerticalAlignment="Center">
+
+                <!-- Left: Save & Test Actions -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <Button Classes="action-btn" Command="{Binding SaveSettingsCommand}"
+                            Background="{DynamicResource AccentStrongBrush}" Foreground="White"
+                            ToolTip.Tip="Save all modifications to the active profile">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <ic:SymbolIcon Symbol="Save" FontSize="11" VerticalAlignment="Center"/>
+                            <TextBlock Text="Save Changes" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Classes="action-btn" Command="{Binding TestConnectionCommand}"
+                            IsEnabled="{Binding !IsTestingConnection}"
+                            Background="{DynamicResource PanelRaisedBrush}" Foreground="{DynamicResource TextPrimaryBrush}"
+                            ToolTip.Tip="Perform SSH connection and handshake latency test">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <ic:SymbolIcon Symbol="Flash" FontSize="11" VerticalAlignment="Center"/>
+                            <TextBlock Text="Test Connection" FontSize="11" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Classes="pill-btn" Command="{Binding SaveAndTestCommand}"
+                            IsEnabled="{Binding !IsTestingConnection}"
+                            ToolTip.Tip="Save profile changes and immediately verify SSH handshake">
+                        <TextBlock Text="Save &amp; Test" FontSize="10"/>
+                    </Button>
+
+                    <Border Width="1" Height="14" Background="{DynamicResource DividerBrush}" Margin="2,0"/>
+
+                    <Button Classes="pill-btn" Command="{Binding DuplicateProfileCommand}"
+                            ToolTip.Tip="Clone this profile into a new instance">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <ic:SymbolIcon Symbol="Copy" FontSize="10" VerticalAlignment="Center"/>
+                            <TextBlock Text="Duplicate" FontSize="10"/>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Active Status Indicator or Activate Button -->
+                    <Border Classes="status-pill success" IsVisible="{Binding IsActiveProfile}"
+                            Padding="8,5" VerticalAlignment="Center" ToolTip.Tip="This profile is currently active across all tabs">
+                        <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                            <ic:SymbolIcon Symbol="Checkmark" FontSize="11" Foreground="{DynamicResource SuccessBrush}" VerticalAlignment="Center"/>
+                            <TextBlock Text="Currently Active VPS" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Button Classes="pill-btn" Command="{Binding ActivateProfileCommand}"
+                            IsVisible="{Binding !IsActiveProfile}"
+                            ToolTip.Tip="Set this profile as the globally active server for Overview, Deploy, and Terminal">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <ic:SymbolIcon Symbol="Checkmark" FontSize="10" VerticalAlignment="Center"/>
+                            <TextBlock Text="Set as Active VPS" FontSize="10"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <!-- Right: Profile Collection Toggles -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <Button Classes="pill-btn" Command="{Binding AddProfileCommand}"
+                            ToolTip.Tip="Add a new server profile">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <ic:SymbolIcon Symbol="Add" FontSize="11" VerticalAlignment="Center"/>
+                            <TextBlock Text="New Profile" FontSize="10"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Classes="pill-btn danger" Command="{Binding RemoveProfileCommand}"
+                            ToolTip.Tip="Delete the currently selected profile">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <ic:SymbolIcon Symbol="Delete" FontSize="11" VerticalAlignment="Center"/>
+                            <TextBlock Text="Delete" FontSize="10"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <!-- Test Diagnostics Banner (Visible when test has completed) -->
+            <Border Grid.Row="2" Background="{DynamicResource PanelRaisedBrush}" Padding="12,8"
+                    BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1" CornerRadius="6"
+                    IsVisible="{Binding HasTestDiagnostics}" Margin="0,4,0,0">
+                <Grid ColumnDefinitions="Auto, *, Auto">
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <Border Classes="status-pill success" IsVisible="{Binding TestSuccess}">
+                            <TextBlock Text="CONNECTED" FontSize="9" FontWeight="Bold"/>
+                        </Border>
+                        <Border Classes="status-pill danger" IsVisible="{Binding !TestSuccess}">
+                            <TextBlock Text="FAILED" FontSize="9" FontWeight="Bold"/>
+                        </Border>
+                        <TextBlock Text="{Binding TestDiagnosticsSummary}" FontSize="11" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <TextBlock Grid.Column="2" Text="{Binding TestLatencyMs, StringFormat='Handshake: {0} ms'}" FontSize="10"
+                               Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             ROW 1: Main Workspace Split (Left: Profiles Sidebar, Right: Settings Form)
+             ═══════════════════════════════════════════════════════════════════ -->
+        <Grid Grid.Row="1" ColumnDefinitions="280, 14, *">
+
+            <!-- Left Column: VPS Profiles Management Pane -->
+            <Border Grid.Column="0" Classes="glass-card" Padding="14,12">
+                <Grid RowDefinitions="Auto, Auto, *, Auto" RowSpacing="8">
+
+                    <!-- Search / Filter -->
+                    <TextBox Grid.Row="0" Text="{Binding SearchText}" PlaceholderText="Search servers by name or IP...">
+                        <TextBox.InnerRightContent>
+                            <ic:SymbolIcon Symbol="Search" FontSize="11" Margin="0,0,8,0" Foreground="{DynamicResource TextMutedBrush}"/>
+                        </TextBox.InnerRightContent>
+                    </TextBox>
+
+                    <TextBlock Grid.Row="1" Text="REGISTERED SERVERS" FontSize="9" FontWeight="Bold"
+                               Foreground="{DynamicResource AccentTeal}" Margin="2,4,0,2"/>
+
+                    <!-- Profiles List -->
+                    <ListBox Grid.Row="2" Classes="profile-list" ItemsSource="{Binding FilteredProfiles}" SelectedItem="{Binding SelectedProfile}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="models:VpsProfile">
+                                <Grid ColumnDefinitions="*, Auto" Margin="2">
+                                    <StackPanel Grid.Column="0" Spacing="2">
+                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="12"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <TextBlock Text="{Binding VpsIp, FallbackValue='0.0.0.0'}" FontSize="10"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                            <TextBlock Text=":" FontSize="10" Foreground="{DynamicResource TextMutedBrush}"/>
+                                            <TextBlock Text="{Binding SshPort}" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <!-- Badges on right of profile card -->
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                        <!-- Auth Badge -->
+                                        <Border Background="{DynamicResource PanelRaisedBrush}" CornerRadius="4" Padding="4,2">
+                                            <TextBlock Text="{Binding AuthMethod}"
+                                                       FontSize="8" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        </Border>
+                                        <!-- OS Badge -->
+                                        <Border Background="{DynamicResource PanelRaisedBrush}" CornerRadius="4" Padding="4,2">
+                                            <TextBlock Text="{Binding TargetOS}" FontSize="8" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        </Border>
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <!-- Profile List Actions -->
+                    <StackPanel Grid.Row="3" Spacing="6" Margin="0,6,0,0">
+                        <Button Classes="action-btn" Command="{Binding AddProfileCommand}"
+                                Background="{DynamicResource PanelRaisedBrush}" Foreground="{DynamicResource TextPrimaryBrush}"
+                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <ic:SymbolIcon Symbol="Add" FontSize="11" VerticalAlignment="Center"/>
+                                <TextBlock Text="Add Server Profile" FontSize="11" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Right Column: Settings Sections Form Container -->
+            <Border Grid.Column="2" Classes="glass-card" Padding="18,14">
+                <Grid RowDefinitions="Auto, *">
+
+                    <!-- Section Header Navigation Tabs -->
+                    <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Margin="0,0,0,12">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <Button Classes="section-nav-pill" Classes.active="{Binding ActiveSection, Converter={x:Static ObjectConverters.Equal}, ConverterParameter='General'}"
+                                    Command="{Binding SetActiveSectionCommand}" CommandParameter="General" Content="⚙️ General &amp; OS"/>
+                            <Button Classes="section-nav-pill" Classes.active="{Binding ActiveSection, Converter={x:Static ObjectConverters.Equal}, ConverterParameter='Ssh'}"
+                                    Command="{Binding SetActiveSectionCommand}" CommandParameter="Ssh" Content="🔐 SSH &amp; Security"/>
+                            <Button Classes="section-nav-pill" Classes.active="{Binding ActiveSection, Converter={x:Static ObjectConverters.Equal}, ConverterParameter='Workspaces'}"
+                                    Command="{Binding SetActiveSectionCommand}" CommandParameter="Workspaces" Content="📁 Workspaces &amp; Paths"/>
+                            <Button Classes="section-nav-pill" Classes.active="{Binding ActiveSection, Converter={x:Static ObjectConverters.Equal}, ConverterParameter='Service'}"
+                                    Command="{Binding SetActiveSectionCommand}" CommandParameter="Service" Content="🚀 Service Lifecycle"/>
+                            <Button Classes="section-nav-pill" Classes.active="{Binding ActiveSection, Converter={x:Static ObjectConverters.Equal}, ConverterParameter='Build'}"
+                                    Command="{Binding SetActiveSectionCommand}" CommandParameter="Build" Content="🛠️ Build &amp; Health"/>
+                            <Button Classes="section-nav-pill" Classes.active="{Binding ActiveSection, Converter={x:Static ObjectConverters.Equal}, ConverterParameter='Database'}"
+                                    Command="{Binding SetActiveSectionCommand}" CommandParameter="Database" Content="🗄️ Database Architecture"/>
+                            <Button Classes="section-nav-pill" Classes.active="{Binding ActiveSection, Converter={x:Static ObjectConverters.Equal}, ConverterParameter='SyncIgnore'}"
+                                    Command="{Binding SetActiveSectionCommand}" CommandParameter="SyncIgnore" Content="🛡️ Global Sync Exclusions"/>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- Scrollable Configuration Sections -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <StackPanel Spacing="14" Margin="0,0,8,0">
+
+                            <!-- ══════════════════════════════════════════════════════
+                                 SECTION 1: Profile Identity & Architecture
+                                 ══════════════════════════════════════════════════════ -->
+                            <Border Classes="section-card" IsVisible="{Binding ActiveSection, Converter={x:Static ObjectConverters.Equal}, ConverterParameter='General'}">
+                                <StackPanel Spacing="12">
+                                    <Grid ColumnDefinitions="*, Auto">
+                                        <StackPanel Spacing="2">
+                                            <TextBlock Text="PROFILE IDENTITY &amp; ARCHITECTURE" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource AccentTeal}"/>
+                                            <TextBlock Text="Target Environment &amp; Platform" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14" FontWeight="Bold"/>
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="1" Text="🏷️" FontSize="18" VerticalAlignment="Center" Opacity="0.6"/>
+                                    </Grid>
+
+                                    <Grid ColumnDefinitions="*, 14, 160, 14, 220">
+                                        <StackPanel Grid.Column="0" Spacing="4">
+                                            <TextBlock Text="Display Name" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                            <TextBox Text="{Binding ProfileName}" PlaceholderText="Production VPS, Staging, Local Sandbox..."/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="2" Spacing="4">
+                                            <TextBlock Text="Target Host OS" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                            <ComboBox ItemsSource="{Binding AvailableHostOS}" SelectedItem="{Binding TargetOS}" HorizontalAlignment="Stretch"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="4" Spacing="4">
+                                            <TextBlock Text="Workload Architecture" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                            <StackPanel Orientation="Horizontal" Spacing="14" Margin="0,4,0,0">
+                                                <RadioButton Content="🐳 Dockerized" IsChecked="{Binding IsDockerized}" GroupName="ArchGroup" FontSize="11"/>
+                                                <RadioButton Content="🖥️ Native Service" IsChecked="{Binding !IsDockerized}" GroupName="ArchGroup" FontSize="11"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- ══════════════════════════════════════════════════════
+                                 SECTION 2: Remote Access (SSH) & Authentication
+                                 ══════════════════════════════════════════════════════ -->
+                            <Border Classes="section-card" IsVisible="{Binding ActiveSection, Converter={x:Static ObjectConverters.Equal}, ConverterParameter='Ssh'}">
+                                <StackPanel Spacing="12">
+                                    <Grid ColumnDefinitions="*, Auto">
+                                        <StackPanel Spacing="2">
+                                            <TextBlock Text="REMOTE ACCESS &amp; CREDENTIALS" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource AccentTeal}"/>
+                                            <TextBlock Text="SSH Authentication, Key Pairs &amp; Ports" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14" FontWeight="Bold"/>
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="1" Text="🔐" FontSize="18" VerticalAlignment="Center" Opacity="0.6"/>
+                                    </Grid>
+
+                                    <!-- Server Connection Parameters -->
+                                    <Grid ColumnDefinitions="*, 14, 110, 14, 160">
+                                        <StackPanel Grid.Column="0" Spacing="4">
+                                            <TextBlock Text="Host or IP Address" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                            <TextBox Text="{Binding VpsIp}" PlaceholderText="192.168.1.100 or vps.example.com"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="2" Spacing="4">
+                                            <TextBlock Text="SSH Port" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                            <NumericUpDown Value="{Binding SshPort}" Minimum="1" Maximum="65535" FormatString="0" HorizontalContentAlignment="Left"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="4" Spacing="4">
+                                            <TextBlock Text="SSH Username" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                            <TextBox Text="{Binding VpsUser}" PlaceholderText="root, ubuntu, deploy"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <!-- Authentication Method Selection -->
+                                    <StackPanel Spacing="6" Margin="0,4,0,0">
+                                        <TextBlock Text="Authentication Method" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <StackPanel Orientation="Horizontal" Spacing="16">
+                                            <RadioButton Content="🔒 Password"
+                                                         IsChecked="{Binding IsPasswordAuth}" GroupName="AuthMethodGroup" FontSize="11"/>
+                                            <RadioButton Content="🔑 Private Key File"
+                                                         IsChecked="{Binding IsPrivateKeyAuth}" GroupName="AuthMethodGroup" FontSize="11"/>
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <!-- Mode: Password Authentication -->
+                                    <StackPanel Spacing="4" IsVisible="{Binding IsPasswordAuth}">
+                                        <Grid ColumnDefinitions="*, Auto">
+                                            <TextBlock Text="SSH User Password" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                            <Button Grid.Column="1" Classes="pill-btn" Command="{Binding TogglePasswordVisibilityCommand}" Padding="8,3">
+                                                <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                                    <ic:SymbolIcon Symbol="EyeOff" FontSize="11" IsVisible="{Binding ShowPassword}" VerticalAlignment="Center"/>
+                                                    <ic:SymbolIcon Symbol="Eye" FontSize="11" IsVisible="{Binding !ShowPassword}" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="Hide" IsVisible="{Binding ShowPassword}" FontSize="10" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="Show" IsVisible="{Binding !ShowPassword}" FontSize="10" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Button>
+                                        </Grid>
+                                        <TextBox Text="{Binding VpsPassword}" PasswordChar="•"
+                                                 RevealPassword="{Binding ShowPassword}" PlaceholderText="Stored securely in OS Credential Manager"/>
+                                        <TextBlock Text="Credentials are automatically encrypted using DPAPI and stored in Windows Credential Manager." FontSize="10" Foreground="{DynamicResource TextMutedBrush}"/>
+                                    </StackPanel>
+
+                                    <!-- Mode: SSH Private Key Authentication -->
+                                    <StackPanel Spacing="8" IsVisible="{Binding IsPrivateKeyAuth}">
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Text="Private Key File Path" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                            <Grid ColumnDefinitions="*, 10, Auto">
+                                                <TextBox Grid.Column="0" Text="{Binding PrivateKeyPath}" PlaceholderText="C:\Users\username\.ssh\id_rsa or /path/to/key.pem"/>
+                                                <Button Grid.Column="2" Classes="action-btn" Content="Browse Key..." Command="{Binding BrowsePrivateKeyFileCommand}"
+                                                        Background="{DynamicResource PanelRaisedBrush}" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                            </Grid>
+                                        </StackPanel>
+
+                                        <StackPanel Spacing="4">
+                                            <Grid ColumnDefinitions="*, Auto">
+                                                <TextBlock Text="Private Key Passphrase (optional)" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                <Button Grid.Column="1" Classes="pill-btn" Command="{Binding TogglePassphraseVisibilityCommand}" Padding="8,3">
+                                                    <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                                        <ic:SymbolIcon Symbol="EyeOff" FontSize="11" IsVisible="{Binding ShowPassphrase}" VerticalAlignment="Center"/>
+                                                        <ic:SymbolIcon Symbol="Eye" FontSize="11" IsVisible="{Binding !ShowPassphrase}" VerticalAlignment="Center"/>
+                                                        <TextBlock Text="Hide" IsVisible="{Binding ShowPassphrase}" FontSize="10" VerticalAlignment="Center"/>
+                                                        <TextBlock Text="Show" IsVisible="{Binding !ShowPassphrase}" FontSize="10" VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </Button>
+                                            </Grid>
+                                            <TextBox Text="{Binding KeyPassphrase}" PasswordChar="•"
+                                                     RevealPassword="{Binding ShowPassphrase}" PlaceholderText="Leave blank if private key has no passphrase"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- ══════════════════════════════════════════════════════
+                                 SECTION 3: Deployment Targets & Paths
+                                 ══════════════════════════════════════════════════════ -->
+                            <Border Classes="section-card" IsVisible="{Binding ActiveSection, Converter={x:Static ObjectConverters.Equal}, ConverterParameter='Workspaces'}">
+                                <StackPanel Spacing="12">
+                                    <Grid ColumnDefinitions="*, Auto">
+                                        <StackPanel Spacing="2">
+                                            <TextBlock Text="DEPLOYMENT TARGETS &amp; PATHS" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource AccentTeal}"/>
+                                            <TextBlock Text="Local Repository &amp; Remote Workspace" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14" FontWeight="Bold"/>
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="1" Text="📁" FontSize="18" VerticalAlignment="Center" Opacity="0.6"/>
+                                    </Grid>
+
+                                    <!-- Local Project Workspace Folder -->
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Text="Local Project Workspace Folder" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <Grid ColumnDefinitions="*, 10, Auto">
+                                            <TextBox Grid.Column="0" Text="{Binding LocalRootPath}" PlaceholderText="D:\Projects\MyApplication"/>
+                                            <Button Grid.Column="2" Classes="action-btn" Content="Browse..." Command="{Binding BrowseLocalPathCommand}"
+                                                    Background="{DynamicResource PanelRaisedBrush}" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                        </Grid>
+                                    </StackPanel>
+
+                                    <!-- Remote Destination Path on VPS -->
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Text="Remote Destination Path on Server" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <TextBox Text="{Binding RemoteProjectPath}" PlaceholderText="/var/www/my_app or C:\apps\my_app"/>
+                                    </StackPanel>
+
+                                    <!-- If Dockerized: Compose file name -->
+                                    <StackPanel Spacing="4" IsVisible="{Binding IsDockerized}">
+                                        <TextBlock Text="Compose / Orchestration File (Remote VPS Path)" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <Grid ColumnDefinitions="*, 10, Auto">
+                                            <TextBox Grid.Column="0" Text="{Binding ComposeFileName}"
+                                                     PlaceholderText="docker-compose.yml (relative to remote project root)"/>
+                                            <Button Grid.Column="2" Classes="pill-btn" Content="Use Default" Command="{Binding ResetComposeFileNameCommand}"
+                                                    ToolTip.Tip="Reset to standard 'docker-compose.yml'"/>
+                                        </Grid>
+
+                                        <!-- Prominent Remote Path Hint -->
+                                        <Border Background="{DynamicResource PanelRaisedBrush}" BorderBrush="{DynamicResource DividerBrush}"
+                                                BorderThickness="1" CornerRadius="6" Padding="10,7" Margin="0,2,0,0">
+                                            <Grid ColumnDefinitions="Auto, *">
+                                                <TextBlock Grid.Column="0" Text="💡" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Top"/>
+                                                <TextBlock Grid.Column="1" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap">
+                                                    <Run FontWeight="SemiBold" Foreground="{DynamicResource AccentTeal}">Remote VPS Path Required:</Run>
+                                                    <Run>This must be the file location on the remote VPS (relative to the Remote Destination Path, e.g. 'docker-compose.yml', or an absolute remote path). It is executed on the remote server, NOT your local workstation.</Run>
+                                                </TextBlock>
+                                            </Grid>
+                                        </Border>
+                                    </StackPanel>
+
+                                    <!-- If Non-Dockerized: Launch Command / Script -->
+                                    <StackPanel Spacing="4" IsVisible="{Binding !IsDockerized}">
+                                        <TextBlock Text="Launch Command or Script Path" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <TextBox Text="{Binding LaunchCommand}" PlaceholderText="./deploy.sh or npm start or python main.py or pm2 reload app"/>
+                                        <TextBlock Text="Executed in the remote project directory after file synchronization." FontSize="10" Foreground="{DynamicResource TextMutedBrush}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- ══════════════════════════════════════════════════════
+                                 SECTION 4: Service & Daemon Lifecycle
+                                 ══════════════════════════════════════════════════════ -->
+                            <Border Classes="section-card" IsVisible="{Binding ActiveSection, Converter={x:Static ObjectConverters.Equal}, ConverterParameter='Service'}">
+                                <StackPanel Spacing="12">
+                                    <Grid ColumnDefinitions="*, Auto">
+                                        <StackPanel Spacing="2">
+                                            <TextBlock Text="SERVICE &amp; DAEMON LIFECYCLE" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource AccentTeal}"/>
+                                            <TextBlock Text="Systemd, PM2 &amp; Process Control Commands" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14" FontWeight="Bold"/>
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="1" Text="🚀" FontSize="18" VerticalAlignment="Center" Opacity="0.6"/>
+                                    </Grid>
+
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Text="System Service / PM2 App Name" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <TextBox Text="{Binding ServiceName}" PlaceholderText="my-app.service or pm2-api"/>
+                                    </StackPanel>
+
+                                    <Grid ColumnDefinitions="*, 12, *, 12, *">
+                                        <StackPanel Grid.Column="0" Spacing="4">
+                                            <TextBlock Text="Start Command" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                            <TextBox Text="{Binding StartCommand}" PlaceholderText="sudo systemctl start my-app"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="2" Spacing="4">
+                                            <TextBlock Text="Stop Command" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                            <TextBox Text="{Binding StopCommand}" PlaceholderText="sudo systemctl stop my-app"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="4" Spacing="4">
+                                            <TextBlock Text="Restart Command" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                            <TextBox Text="{Binding RestartCommand}" PlaceholderText="sudo systemctl restart my-app"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- ══════════════════════════════════════════════════════
+                                 SECTION 5: Local Build Strategy & Health Checking
+                                 ══════════════════════════════════════════════════════ -->
+                            <Border Classes="section-card" IsVisible="{Binding ActiveSection, Converter={x:Static ObjectConverters.Equal}, ConverterParameter='Build'}">
+                                <StackPanel Spacing="12">
+                                    <Grid ColumnDefinitions="*, Auto">
+                                        <StackPanel Spacing="2">
+                                            <TextBlock Text="BUILD PIPELINE &amp; HEALTH CHECKING" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource AccentTeal}"/>
+                                            <TextBlock Text="Pre-Deploy Build &amp; Post-Deploy Verification" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14" FontWeight="Bold"/>
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="1" Text="🛠️" FontSize="18" VerticalAlignment="Center" Opacity="0.6"/>
+                                    </Grid>
+
+                                    <!-- Build Strategy -->
+                                    <Grid ColumnDefinitions="180, 14, *">
+                                        <StackPanel Grid.Column="0" Spacing="4">
+                                            <TextBlock Text="Local Build Strategy" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                            <ComboBox ItemsSource="{Binding AvailableBuildStrategies}" SelectedItem="{Binding BuildStrategy}" HorizontalAlignment="Stretch"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="2" Spacing="4">
+                                            <TextBlock Text="Custom Local Build Command" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                            <TextBox Text="{Binding LocalBuildCommand}" PlaceholderText="npm run build, dotnet publish -c Release, cargo build..."/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Text="Build Artifact Output Directory (Optional)" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <Grid ColumnDefinitions="*, 10, Auto">
+                                            <TextBox Grid.Column="0" Text="{Binding BuildArtifactPath}" PlaceholderText="dist/, bin/Release/publish/, build/..."/>
+                                            <Button Grid.Column="2" Classes="action-btn" Content="Browse..." Command="{Binding BrowseArtifactPathCommand}"
+                                                    Background="{DynamicResource PanelRaisedBrush}" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                        </Grid>
+                                    </StackPanel>
+
+                                    <!-- Health Checking -->
+                                    <Border Height="1" Background="{DynamicResource DividerBrush}" Margin="0,4"/>
+
+                                    <Grid ColumnDefinitions="180, 14, *, 14, 110">
+                                        <StackPanel Grid.Column="0" Spacing="4">
+                                            <TextBlock Text="Health Probe Type" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                            <ComboBox ItemsSource="{Binding AvailableHealthCheckTypes}" SelectedItem="{Binding HealthCheckType}" HorizontalAlignment="Stretch"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="2" Spacing="4">
+                                            <TextBlock Text="Probe URL / Command" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                            <TextBox Text="{Binding HealthCheckUrl}" PlaceholderText="http://localhost:8080/health or curl -f..."/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="4" Spacing="4">
+                                            <TextBlock Text="TCP Port Probe" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                            <NumericUpDown Value="{Binding HealthCheckPort}" Minimum="1" Maximum="65535" FormatString="0" HorizontalContentAlignment="Left"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- ══════════════════════════════════════════════════════
+                                 SECTION 6: Database Architecture
+                                 ══════════════════════════════════════════════════════ -->
+                            <Border Classes="section-card" IsVisible="{Binding ActiveSection, Converter={x:Static ObjectConverters.Equal}, ConverterParameter='Database'}">
+                                <StackPanel Spacing="12">
+                                    <Grid ColumnDefinitions="*, Auto">
+                                        <StackPanel Spacing="2">
+                                            <TextBlock Text="DATABASE ARCHITECTURE" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource AccentTeal}"/>
+                                            <TextBlock Text="Engine, Host &amp; Custom Backup Commands" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14" FontWeight="Bold"/>
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="1" Text="🗄️" FontSize="18" VerticalAlignment="Center" Opacity="0.6"/>
+                                    </Grid>
+
+                                    <Grid ColumnDefinitions="180, 14, 110, 14, Auto">
+                                        <StackPanel Grid.Column="0" Spacing="4">
+                                            <TextBlock Text="Engine Type" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                            <ComboBox ItemsSource="{Binding AvailableDbEngines}" SelectedItem="{Binding DbEngine}" HorizontalAlignment="Stretch"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="2" Spacing="4">
+                                            <TextBlock Text="Port" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                            <NumericUpDown Value="{Binding DbPort}" Minimum="1" Maximum="65535" FormatString="0" HorizontalContentAlignment="Left"/>
+                                        </StackPanel>
+
+                                        <CheckBox Grid.Column="4" Content="Containerized in Docker" IsChecked="{Binding IsDbContainerized}"
+                                                  VerticalAlignment="Bottom" Margin="0,0,0,6" FontSize="11"/>
+                                    </Grid>
+
+                                    <Grid ColumnDefinitions="*, 14, *, 14, *">
+                                        <StackPanel Grid.Column="0" Spacing="4">
+                                            <TextBlock Text="Container / Host" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                            <TextBox Text="{Binding DbContainerName}" PlaceholderText="postgres or 127.0.0.1"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="2" Spacing="4">
+                                            <TextBlock Text="Database Name" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                            <TextBox Text="{Binding DbName}" PlaceholderText="app_db"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="4" Spacing="4">
+                                            <TextBlock Text="Database User" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                            <TextBox Text="{Binding DbUser}" PlaceholderText="postgres"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <Grid ColumnDefinitions="*, 14, *">
+                                        <StackPanel Grid.Column="0" Spacing="4">
+                                            <TextBlock Text="Custom Dump Command Override (Optional)" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                            <TextBox Text="{Binding CustomBackupCommand}" PlaceholderText="pg_dump -Fc ... or mysqldump ..."/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="2" Spacing="4">
+                                            <TextBlock Text="Custom Migration Command (Optional)" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                            <TextBox Text="{Binding CustomMigrationCommand}" PlaceholderText="dotnet ef database update or npx prisma migrate deploy"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- ══════════════════════════════════════════════════════
+                                 SECTION 7: Global File Sync Exclusions (.syncignore)
+                                 ══════════════════════════════════════════════════════ -->
+                            <Border Classes="section-card" IsVisible="{Binding ActiveSection, Converter={x:Static ObjectConverters.Equal}, ConverterParameter='SyncIgnore'}">
+                                <StackPanel Spacing="14">
+                                    <Grid ColumnDefinitions="*, Auto">
+                                        <StackPanel Spacing="2">
+                                            <TextBlock Text="GLOBAL FILE SYNCHRONIZATION EXCLUSIONS" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource AccentTeal}"/>
+                                            <TextBlock Text="Selectable Project Tree &amp; Ignore Patterns (.syncignore)" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14" FontWeight="Bold"/>
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="1" Text="🛡️" FontSize="18" VerticalAlignment="Center" Opacity="0.6"/>
+                                    </Grid>
+
+                                    <TextBlock Text="Select folders or files below to exclude them from VPS synchronization, deployment pipelines, and hot-patches. Checked items are automatically written to your repository's .syncignore file."
+                                               FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+
+                                    <!-- If no local workspace is configured -->
+                                    <Border IsVisible="{Binding !HasLocalWorkspace}"
+                                            Background="{DynamicResource PanelRaisedBrush}" BorderBrush="{DynamicResource DividerBrush}"
+                                            BorderThickness="1" CornerRadius="8" Padding="14">
+                                        <StackPanel Spacing="8" HorizontalAlignment="Center">
+                                            <TextBlock Text="📁 No Local Project Workspace Configured" FontWeight="SemiBold"
+                                                       FontSize="12" Foreground="{DynamicResource WarningBrush}" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="Please configure a local workspace folder in 'Workspaces &amp; Paths' to enable interactive file and folder selection."
+                                                       FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" TextWrapping="Wrap"/>
+                                            <Button Classes="action-btn" Content="Go to Workspaces &amp; Paths"
+                                                    Command="{Binding SetActiveSectionCommand}" CommandParameter="Workspaces"
+                                                    HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Interactive Workspace File Tree Container (when workspace is present) -->
+                                    <StackPanel Spacing="10" IsVisible="{Binding HasLocalWorkspace}">
+                                        <!-- Filter & Action Toolbar -->
+                                        <Grid ColumnDefinitions="*, Auto, Auto, Auto, Auto" ColumnSpacing="8" VerticalAlignment="Center">
+                                            <!-- Filter Query -->
+                                            <TextBox Grid.Column="0" Text="{Binding SyncIgnoreFilterQuery}"
+                                                     PlaceholderText="Filter workspace tree by name or path..."
+                                                     Padding="8,5" FontSize="11" CornerRadius="6"/>
+
+                                            <!-- Rescan -->
+                                            <Button Grid.Column="1" Classes="pill-btn" Command="{Binding ScanWorkspaceTreeCommand}"
+                                                    ToolTip.Tip="Re-read folder tree from local disk">
+                                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                                    <ic:SymbolIcon Symbol="ArrowClockwise" FontSize="11" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="Rescan" FontSize="10" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Button>
+
+                                            <!-- Select All -->
+                                            <Button Grid.Column="2" Classes="pill-btn" Command="{Binding SelectAllInTreeCommand}"
+                                                    IsEnabled="{Binding !IsRawEditorMode}" ToolTip.Tip="Check all items to ignore">
+                                                <TextBlock Text="Select All" FontSize="10"/>
+                                            </Button>
+
+                                            <!-- Deselect All -->
+                                            <Button Grid.Column="3" Classes="pill-btn" Command="{Binding DeselectAllInTreeCommand}"
+                                                    IsEnabled="{Binding !IsRawEditorMode}" ToolTip.Tip="Uncheck all items">
+                                                <TextBlock Text="Deselect All" FontSize="10"/>
+                                            </Button>
+
+                                            <!-- Toggle Raw Editor Mode -->
+                                            <Button Grid.Column="4" Classes="pill-btn" Command="{Binding ToggleRawEditorModeCommand}">
+                                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                                    <ic:SymbolIcon Symbol="DocumentEdit" FontSize="11" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="Edit Raw .syncignore" IsVisible="{Binding !IsRawEditorMode}" FontSize="10" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="Back to Tree View" IsVisible="{Binding IsRawEditorMode}" FontSize="10" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Button>
+                                        </Grid>
+
+                                        <!-- Center View: TreeView or Raw Editor -->
+                                        <Grid MinHeight="260" MaxHeight="380">
+                                            <!-- Scanning Spinner -->
+                                            <StackPanel IsVisible="{Binding IsScanningSyncIgnoreTree}"
+                                                        HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10">
+                                                <ProgressBar IsIndeterminate="True" Width="140" Height="4" Foreground="{DynamicResource AccentBrush}"/>
+                                                <TextBlock Text="Scanning workspace directory hierarchy..." FontSize="11"
+                                                           Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center"/>
+                                            </StackPanel>
+
+                                            <!-- TreeView -->
+                                            <Border IsVisible="{Binding !IsRawEditorMode}"
+                                                    Background="{DynamicResource PanelRaisedBrush}"
+                                                    BorderBrush="{DynamicResource DividerBrush}"
+                                                    BorderThickness="1"
+                                                    CornerRadius="8"
+                                                    Padding="8">
+                                                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                                                    <TreeView ItemsSource="{Binding SyncIgnoreTreeNodes}"
+                                                              Background="Transparent"
+                                                              SelectionMode="Single">
+                                                        <TreeView.ItemTemplate>
+                                                            <TreeDataTemplate DataType="{x:Type models:FilePatchNode}" ItemsSource="{Binding Children}">
+                                                                <Border IsVisible="{Binding IsVisibleInFilter}" Padding="4,2" CornerRadius="4">
+                                                                    <Grid ColumnDefinitions="24, Auto, *, Auto" MinHeight="26" ColumnSpacing="6">
+                                                                        <!-- Checkbox for Ignore status -->
+                                                                        <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected}"
+                                                                                  HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                                                  ToolTip.Tip="Checked = Ignored from sync"/>
+
+                                                                        <!-- Icon -->
+                                                                        <TextBlock Grid.Column="1" Text="📁" FontSize="13"
+                                                                                   Foreground="{DynamicResource WarningTextBrush}"
+                                                                                   IsVisible="{Binding IsDirectory}" VerticalAlignment="Center"/>
+                                                                        <TextBlock Grid.Column="1" Text="📄" FontSize="13"
+                                                                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                                                                   IsVisible="{Binding !IsDirectory}" VerticalAlignment="Center"/>
+
+                                                                        <!-- Path Name -->
+                                                                        <TextBlock Grid.Column="2" Text="{Binding Name}"
+                                                                                   FontSize="12"
+                                                                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                                                                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+
+                                                                        <!-- Status Badge -->
+                                                                        <Border Grid.Column="3" Background="{DynamicResource MetricBadgeBackgroundBrush}"
+                                                                                BorderBrush="{DynamicResource MetricBadgeBorderBrush}" BorderThickness="1"
+                                                                                CornerRadius="4" Padding="6,1" VerticalAlignment="Center">
+                                                                            <TextBlock Text="IGNORED" IsVisible="{Binding IsSelected}"
+                                                                                       Foreground="{DynamicResource WarningBrush}" FontSize="9" FontWeight="Bold"/>
+                                                                        </Border>
+                                                                    </Grid>
+                                                                </Border>
+                                                            </TreeDataTemplate>
+                                                        </TreeView.ItemTemplate>
+                                                    </TreeView>
+                                                </ScrollViewer>
+                                            </Border>
+
+                                            <!-- Raw Text Editor View -->
+                                            <Border IsVisible="{Binding IsRawEditorMode}"
+                                                    Background="{DynamicResource LogSurfaceBrush}"
+                                                    BorderBrush="{DynamicResource DividerBrush}"
+                                                    BorderThickness="1"
+                                                    CornerRadius="8"
+                                                    Padding="10">
+                                                <TextBox Text="{Binding RawSyncIgnoreEditorText, Mode=TwoWay}"
+                                                         AcceptsReturn="True"
+                                                         AcceptsTab="True"
+                                                         FontFamily="Cascadia Mono, Consolas, Courier New, Monospace"
+                                                         FontSize="11"
+                                                         Background="Transparent"
+                                                         Foreground="{DynamicResource LogTextBrush}"
+                                                         BorderThickness="0"/>
+                                            </Border>
+                                        </Grid>
+
+                                        <!-- Tree Footer: Summary and Save Action -->
+                                        <Grid ColumnDefinitions="*, Auto" ColumnSpacing="12" VerticalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding IgnoredDirsCount, StringFormat='{}{0} folders ignored'}"
+                                                           FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource WarningBrush}"/>
+                                                <TextBlock Text="•" FontSize="11" Foreground="{DynamicResource TextMutedBrush}"/>
+                                                <TextBlock Text="{Binding IgnoredFilesCount, StringFormat='{}{0} files ignored'}"
+                                                           FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource AccentTeal}"/>
+                                                <TextBlock Text="•" FontSize="11" Foreground="{DynamicResource TextMutedBrush}"
+                                                           IsVisible="{Binding SyncIgnoreStatusSummary, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                                                <TextBlock Text="{Binding SyncIgnoreStatusSummary}" FontSize="10"
+                                                           Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"
+                                                           TextTrimming="CharacterEllipsis" MaxWidth="300"/>
+                                            </StackPanel>
+
+                                            <Button Grid.Column="1" Classes="action-btn" Command="{Binding SaveSyncIgnoreFileCommand}"
+                                                    Background="{DynamicResource AccentStrongBrush}" Foreground="White">
+                                                <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                                                    <ic:SymbolIcon Symbol="Save" FontSize="13" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="Save .syncignore" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Button>
+                                        </Grid>
+                                    </StackPanel>
+
+                                    <!-- Divider -->
+                                    <Separator Background="{DynamicResource DividerBrush}" Margin="0,4"/>
+
+                                    <!-- Universal Pattern Badges Header -->
+                                    <TextBlock Text="Global Fallback Patterns (Applicable across all profiles)"
+                                               FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+
+                                    <!-- Add New Pattern Input Strip -->
+                                    <Grid ColumnDefinitions="*, 10, Auto, 10, Auto">
+                                        <TextBox Grid.Column="0" Text="{Binding NewIgnorePattern}" PlaceholderText="Enter glob pattern, e.g. *.log, temp/, cache/..."/>
+                                        <Button Grid.Column="2" Classes="action-btn" Content="+ Add Pattern" Command="{Binding AddIgnorePatternCommand}"
+                                                Background="{DynamicResource AccentStrongBrush}" Foreground="White"/>
+                                        <Button Grid.Column="4" Classes="pill-btn" Content="Reset to Defaults" Command="{Binding ResetDefaultIgnorePatternsCommand}"
+                                                ToolTip.Tip="Reset to recommended standard baseline patterns"/>
+                                    </Grid>
+
+                                    <!-- Active Ignore Patterns Wrap Panel -->
+                                    <Border Background="{DynamicResource PanelRaisedBrush}" BorderBrush="{DynamicResource DividerBrush}"
+                                            BorderThickness="1" CornerRadius="8" Padding="12">
+                                        <ItemsControl ItemsSource="{Binding GlobalSyncIgnorePatterns}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <WrapPanel Orientation="Horizontal"/>
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Classes="pattern-badge">
+                                                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                                            <ic:SymbolIcon Symbol="Document" FontSize="10" Foreground="{DynamicResource AccentTeal}" VerticalAlignment="Center"/>
+                                                            <TextBlock Text="{Binding}" FontSize="11" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                                            <Button Background="Transparent" BorderThickness="0" Padding="2"
+                                                                    Command="{Binding $parent[UserControl].((vm:SettingsViewModel)DataContext).RemoveIgnorePatternCommand}"
+                                                                    CommandParameter="{Binding}" ToolTip.Tip="Remove pattern" Cursor="Hand">
+                                                                <ic:SymbolIcon Symbol="Dismiss" FontSize="9" Foreground="{DynamicResource DangerBrush}"/>
+                                                            </Button>
+                                                        </StackPanel>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

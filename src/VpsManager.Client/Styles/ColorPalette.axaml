@@ -1,0 +1,200 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ═══════════════════════════════════════════════════════════════════════════
+         BRIDGE DESIGN SYSTEM — MASTER COLOR PALETTE
+         Edit THIS SINGLE FILE to completely customize the entire application's
+         color palette: backgrounds, panels, typography, inputs, watermarks,
+         dropdown/spinner arrows, icons, borders, diffs, and state indicators.
+         ═══════════════════════════════════════════════════════════════════════════ -->
+
+    <!-- ── Canvas & Surface Elevation ── -->
+    <SolidColorBrush x:Key="AppSurfaceBrush" Color="#161A1D"/>
+    <SolidColorBrush x:Key="SidebarBrush" Color="#1B2025"/>
+    <SolidColorBrush x:Key="SidebarActiveBrush" Color="#162E29"/>
+    <SolidColorBrush x:Key="SidebarActiveBorderBrush" Color="#224840"/>
+    <SolidColorBrush x:Key="SidebarActiveHoverBrush" Color="#1C3832"/>
+    <SolidColorBrush x:Key="PanelBrush" Color="#22272B"/>
+    <SolidColorBrush x:Key="PanelRaisedBrush" Color="#293036"/>
+    <SolidColorBrush x:Key="DividerBrush" Color="#343C44"/>
+    <SolidColorBrush x:Key="DividerHighlightBrush" Color="#4A5562"/>
+    <SolidColorBrush x:Key="LogSurfaceBrush" Color="#0F1316"/>
+    <SolidColorBrush x:Key="LogTextBrush" Color="#D5E4DC"/>
+    <SolidColorBrush x:Key="TerminalGreenBrush" Color="#38EF7D"/>
+    <SolidColorBrush x:Key="HeaderBadgeBackgroundBrush" Color="#1A2026"/>
+    <SolidColorBrush x:Key="TabSelectedBackgroundBrush" Color="#1C2630"/>
+    <BoxShadows x:Key="PanelShadow">0 4 16 0 #30000000</BoxShadows>
+
+    <!-- ── Typography (High Contrast Guaranteed on Dark) ── -->
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F3F6F8"/>
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#9AA7B2"/>
+    <SolidColorBrush x:Key="TextMutedBrush" Color="#71808B"/>
+    <SolidColorBrush x:Key="TextPlaceholderBrush" Color="#8593A0"/>
+    <SolidColorBrush x:Key="TextWhiteBrush" Color="#FFFFFF"/>
+
+    <!-- Backward-compat aliases for typography & surface -->
+    <SolidColorBrush x:Key="TextPrimary" Color="#F3F6F8"/>
+    <SolidColorBrush x:Key="TextSecondary" Color="#9AA7B2"/>
+    <SolidColorBrush x:Key="SurfaceDark" Color="#22272B"/>
+    <SolidColorBrush x:Key="SurfaceLight" Color="#293036"/>
+    <SolidColorBrush x:Key="BorderMuted" Color="#343C44"/>
+    <SolidColorBrush x:Key="TermGreen" Color="#38EF7D"/>
+
+    <!-- ── Brand Accent & Interactive States ── -->
+    <SolidColorBrush x:Key="AccentBrush" Color="#70D6C2"/>
+    <SolidColorBrush x:Key="AccentStrongBrush" Color="#2F9E8F"/>
+    <SolidColorBrush x:Key="AccentActiveBrush" Color="#31443E"/>
+    <SolidColorBrush x:Key="AccentCyan" Color="#70D6C2"/>
+    <SolidColorBrush x:Key="AccentTeal" Color="#70D6C2"/>
+    <SolidColorBrush x:Key="AccentSky" Color="#79B8F2"/>
+    <SolidColorBrush x:Key="MetricAmber" Color="#F4C16E"/>
+
+    <!-- ── Modern Telemetry Dashboard Colors (CPU, RAM, Disk, Network) ── -->
+    <SolidColorBrush x:Key="MetricCpuWaveBrush" Color="#38BDF8"/>
+    <SolidColorBrush x:Key="MetricRamActiveBrush" Color="#79B8F2"/>
+    <SolidColorBrush x:Key="MetricRamBuffersBrush" Color="#70D6C2"/>
+    <SolidColorBrush x:Key="MetricDiskOrchidBrush" Color="#C084FC"/>
+    <SolidColorBrush x:Key="MetricNetRxBrush" Color="#38BDF8"/>
+    <SolidColorBrush x:Key="MetricNetTxBrush" Color="#818CF8"/>
+    <SolidColorBrush x:Key="MetricBadgeBackgroundBrush" Color="#161B20"/>
+    <SolidColorBrush x:Key="MetricBadgeBorderBrush" Color="#2A3036"/>
+
+    <!-- ── Semantic Statuses (Banners, Cards, Badges) ── -->
+    <SolidColorBrush x:Key="SuccessBrush" Color="#79D6AE"/>
+    <SolidColorBrush x:Key="SuccessSurfaceBrush" Color="#0B291B"/>
+    <SolidColorBrush x:Key="SuccessBorderBrush" Color="#1E5437"/>
+    <SolidColorBrush x:Key="SuccessTextBrush" Color="#79D6AE"/>
+
+    <SolidColorBrush x:Key="WarningBrush" Color="#F4C16E"/>
+    <SolidColorBrush x:Key="WarningSurfaceBrush" Color="#2E2208"/>
+    <SolidColorBrush x:Key="WarningBorderBrush" Color="#5C4210"/>
+    <SolidColorBrush x:Key="WarningTextBrush" Color="#F59E0B"/>
+
+    <SolidColorBrush x:Key="DangerBrush" Color="#E16A72"/>
+    <SolidColorBrush x:Key="DangerSurfaceBrush" Color="#3F1D24"/>
+    <SolidColorBrush x:Key="DangerBorderBrush" Color="#61232B"/>
+    <SolidColorBrush x:Key="DangerTextBrush" Color="#FF8A8A"/>
+
+    <SolidColorBrush x:Key="InfoBrush" Color="#79B8F2"/>
+    <SolidColorBrush x:Key="InfoSurfaceBrush" Color="#1A2938"/>
+    <SolidColorBrush x:Key="InfoTextBrush" Color="#79B8F2"/>
+
+    <!-- ── Patch & Git Differential Scopes ── -->
+    <SolidColorBrush x:Key="PatchModifiedBrush" Color="#F59E0B"/>
+    <SolidColorBrush x:Key="PatchModifiedSurfaceBrush" Color="#1C1508"/>
+    <SolidColorBrush x:Key="PatchModifiedBorderBrush" Color="#3D2E0A"/>
+
+    <SolidColorBrush x:Key="PatchNewBrush" Color="#22C55E"/>
+    <SolidColorBrush x:Key="PatchNewSurfaceBrush" Color="#052E16"/>
+    <SolidColorBrush x:Key="PatchNewBorderBrush" Color="#14532D"/>
+
+    <SolidColorBrush x:Key="PatchDeletedBrush" Color="#EF4444"/>
+    <SolidColorBrush x:Key="PatchDeletedSurfaceBrush" Color="#2A0A0A"/>
+    <SolidColorBrush x:Key="PatchDeletedBorderBrush" Color="#450A0A"/>
+
+    <SolidColorBrush x:Key="PatchUnchangedBrush" Color="#64748B"/>
+
+    <!-- Backward-compat aliases for patch brushes -->
+    <SolidColorBrush x:Key="ModifiedBrush" Color="#F59E0B"/>
+    <SolidColorBrush x:Key="NewBrush" Color="#22C55E"/>
+    <SolidColorBrush x:Key="DeletedBrush" Color="#EF4444"/>
+    <SolidColorBrush x:Key="UnchangedBrush" Color="#64748B"/>
+
+    <!-- ── Pipeline Step Statuses (Progress Stepper) ── -->
+    <SolidColorBrush x:Key="StepPendingBrush" Color="#71808B"/>
+    <SolidColorBrush x:Key="StepInProgressBrush" Color="#38BDF8"/>
+    <SolidColorBrush x:Key="StepCompletedBrush" Color="#22C55E"/>
+    <SolidColorBrush x:Key="StepFailedBrush" Color="#EF4444"/>
+    <SolidColorBrush x:Key="StepSkippedBrush" Color="#F59E0B"/>
+
+    <SolidColorBrush x:Key="StepPendingBackgroundBrush" Color="#1E2328"/>
+    <SolidColorBrush x:Key="StepInProgressBackgroundBrush" Color="#0C2538"/>
+    <SolidColorBrush x:Key="StepCompletedBackgroundBrush" Color="#07331D"/>
+    <SolidColorBrush x:Key="StepFailedBackgroundBrush" Color="#381014"/>
+    <SolidColorBrush x:Key="StepSkippedBackgroundBrush" Color="#2D2108"/>
+
+    <!-- ── Controls & Inputs (TextBox, ComboBox, Spinners, CheckBoxes) ── -->
+    <SolidColorBrush x:Key="InputBackgroundBrush" Color="#22272B"/>
+    <SolidColorBrush x:Key="InputBackgroundPointerOverBrush" Color="#293036"/>
+    <SolidColorBrush x:Key="InputBackgroundFocusedBrush" Color="#22272B"/>
+    <SolidColorBrush x:Key="InputBorderBrush" Color="#343C44"/>
+    <SolidColorBrush x:Key="InputBorderPointerOverBrush" Color="#70D6C2"/>
+    <SolidColorBrush x:Key="InputBorderFocusedBrush" Color="#70D6C2"/>
+    <SolidColorBrush x:Key="InputForegroundBrush" Color="#F3F6F8"/>
+    <SolidColorBrush x:Key="InputPlaceholderBrush" Color="#8593A0"/>
+    <SolidColorBrush x:Key="ControlGlyphBrush" Color="#9AA7B2"/>
+    <SolidColorBrush x:Key="ControlGlyphHoverBrush" Color="#70D6C2"/>
+    <SolidColorBrush x:Key="CaptionCloseHoverBrush" Color="#C42B1C"/>
+    <SolidColorBrush x:Key="CaptionClosePressedBrush" Color="#A82317"/>
+
+    <!-- ── Avalonia Theme Overrides (Enforces input, placeholder & arrow visibility) ── -->
+    <SolidColorBrush x:Key="TextControlBackground" Color="#22272B"/>
+    <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="#293036"/>
+    <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="#22272B"/>
+    <SolidColorBrush x:Key="TextControlForeground" Color="#F3F6F8"/>
+    <SolidColorBrush x:Key="TextControlForegroundPointerOver" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="TextControlForegroundFocused" Color="#F3F6F8"/>
+    <SolidColorBrush x:Key="TextControlBorderBrush" Color="#343C44"/>
+    <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="#70D6C2"/>
+    <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="#70D6C2"/>
+    <SolidColorBrush x:Key="TextControlPlaceholderForeground" Color="#8593A0"/>
+    <SolidColorBrush x:Key="TextControlPlaceholderForegroundPointerOver" Color="#A3AFBA"/>
+    <SolidColorBrush x:Key="TextControlPlaceholderForegroundFocused" Color="#8593A0"/>
+
+    <SolidColorBrush x:Key="ComboBoxBackground" Color="#22272B"/>
+    <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver" Color="#293036"/>
+    <SolidColorBrush x:Key="ComboBoxForeground" Color="#F3F6F8"/>
+    <SolidColorBrush x:Key="ComboBoxForegroundPointerOver" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="ComboBoxBorderBrush" Color="#343C44"/>
+    <SolidColorBrush x:Key="ComboBoxBorderBrushPointerOver" Color="#70D6C2"/>
+    <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="#22272B"/>
+    <SolidColorBrush x:Key="ComboBoxDropDownGlyphForeground" Color="#9AA7B2"/>
+    <SolidColorBrush x:Key="ComboBoxDropDownGlyphForegroundPointerOver" Color="#70D6C2"/>
+    <SolidColorBrush x:Key="ComboBoxDropDownGlyphForegroundFocused" Color="#70D6C2"/>
+    <SolidColorBrush x:Key="ComboBoxDropDownGlyphForegroundPressed" Color="#2F9E8F"/>
+    <SolidColorBrush x:Key="ComboBoxDropDownGlyphForegroundDisabled" Color="#71808B"/>
+    <SolidColorBrush x:Key="ComboBoxItemForeground" Color="#F3F6F8"/>
+    <SolidColorBrush x:Key="ComboBoxItemForegroundPointerOver" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="ComboBoxItemForegroundSelected" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="ComboBoxItemBackgroundPointerOver" Color="#293036"/>
+    <SolidColorBrush x:Key="ComboBoxItemBackgroundSelected" Color="#2F9E8F"/>
+
+    <SolidColorBrush x:Key="NumericUpDownButtonForeground" Color="#9AA7B2"/>
+    <SolidColorBrush x:Key="NumericUpDownButtonForegroundPointerOver" Color="#70D6C2"/>
+    <SolidColorBrush x:Key="NumericUpDownButtonForegroundPressed" Color="#2F9E8F"/>
+    <SolidColorBrush x:Key="NumericUpDownButtonForegroundDisabled" Color="#71808B"/>
+
+    <SolidColorBrush x:Key="ToggleSwitchHeaderForeground" Color="#F3F6F8"/>
+    <SolidColorBrush x:Key="ToggleSwitchContentForeground" Color="#F3F6F8"/>
+    <SolidColorBrush x:Key="ToggleSwitchKnobFillOff" Color="#9AA7B2"/>
+    <SolidColorBrush x:Key="ToggleSwitchKnobFillOn" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="ToggleSwitchFillOff" Color="#293036"/>
+    <SolidColorBrush x:Key="ToggleSwitchFillOn" Color="#2F9E8F"/>
+    <SolidColorBrush x:Key="ToggleSwitchStrokeOff" Color="#343C44"/>
+    <SolidColorBrush x:Key="ToggleSwitchStrokeOn" Color="#70D6C2"/>
+
+    <SolidColorBrush x:Key="CheckBoxForegroundUnchecked" Color="#F3F6F8"/>
+    <SolidColorBrush x:Key="CheckBoxForegroundChecked" Color="#F3F6F8"/>
+    <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundChecked" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillUnchecked" Color="#293036"/>
+    <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillChecked" Color="#2F9E8F"/>
+
+    <SolidColorBrush x:Key="RadioButtonForeground" Color="#F3F6F8"/>
+
+    <!-- ── Semi Theme Tokens Mapping ── -->
+    <SolidColorBrush x:Key="SemiColorBackground0" Color="#161A1D"/>
+    <SolidColorBrush x:Key="SemiColorBackground1" Color="#22272B"/>
+    <SolidColorBrush x:Key="SemiColorBackground2" Color="#293036"/>
+    <SolidColorBrush x:Key="SemiColorBorder" Color="#343C44"/>
+    <SolidColorBrush x:Key="SemiColorText0" Color="#F3F6F8"/>
+    <SolidColorBrush x:Key="SemiColorText1" Color="#9AA7B2"/>
+    <SolidColorBrush x:Key="SemiColorText2" Color="#71808B"/>
+    <SolidColorBrush x:Key="SemiColorPrimary" Color="#70D6C2"/>
+    <SolidColorBrush x:Key="SemiColorPrimaryHover" Color="#2F9E8F"/>
+    <SolidColorBrush x:Key="SemiColorPrimaryActive" Color="#1D6B61"/>
+    <SolidColorBrush x:Key="SemiColorDanger" Color="#E16A72"/>
+    <SolidColorBrush x:Key="SemiColorWarning" Color="#F4C16E"/>
+    <SolidColorBrush x:Key="SemiColorSuccess" Color="#79D6AE"/>
+    <SolidColorBrush x:Key="SemiColorInfo" Color="#79B8F2"/>
+
+</ResourceDictionary>

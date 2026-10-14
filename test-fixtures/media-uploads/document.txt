@@ -1,0 +1,3 @@
+This is a sample document uploaded to the VPS media store.
+Created for verifying automated vault backups and local download offloading.
+Timestamp: 2026-10-14

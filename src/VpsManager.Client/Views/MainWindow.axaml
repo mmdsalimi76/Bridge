@@ -1,0 +1,556 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:VpsManager.Client.ViewModels"
+        xmlns:views="using:VpsManager.Client.Views"
+        xmlns:ic="using:FluentIcons.Avalonia"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="820"
+        x:Class="VpsManager.Client.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Icon="/Assets/bridge.ico"
+        Title="Bridge"
+        Width="1280" Height="820"
+        MinWidth="1160" MinHeight="720"
+        WindowStartupLocation="CenterScreen"
+        WindowDecorations="BorderOnly"
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaTitleBarHeightHint="34">
+
+    <!-- Root Shell Grid: Title Bar (Row 0) + Main Workstation (Row 1) -->
+    <Grid RowDefinitions="Auto, *">
+        <Grid.Styles>
+            <Style Selector="Button.caption-btn">
+                <Setter Property="Width" Value="46"/>
+                <Setter Property="Height" Value="34"/>
+                <Setter Property="Padding" Value="0"/>
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="CornerRadius" Value="0"/>
+                <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+            </Style>
+            <Style Selector="Button.caption-btn:pointerover">
+                <Setter Property="Background" Value="{DynamicResource PanelRaisedBrush}"/>
+                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+            </Style>
+            <Style Selector="Button.caption-close:pointerover">
+                <Setter Property="Background" Value="{DynamicResource CaptionCloseHoverBrush}"/>
+                <Setter Property="Foreground" Value="{DynamicResource TextWhiteBrush}"/>
+            </Style>
+            <Style Selector="Button.caption-close:pressed">
+                <Setter Property="Background" Value="{DynamicResource CaptionClosePressedBrush}"/>
+                <Setter Property="Foreground" Value="{DynamicResource TextWhiteBrush}"/>
+            </Style>
+        </Grid.Styles>
+
+        <!-- Custom Title Bar matching app dark palette -->
+        <Border Grid.Row="0"
+                Height="34"
+                Background="{DynamicResource SidebarBrush}"
+                BorderBrush="{DynamicResource DividerBrush}"
+                BorderThickness="0,0,0,1"
+                PointerPressed="OnTitleBarPointerPressed">
+            <Grid ColumnDefinitions="Auto, *, Auto">
+                <!-- Left: App Brand & Edition -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Margin="12,0,0,0">
+                    <Image Source="/Assets/logo.png" Width="16" Height="16" RenderOptions.BitmapInterpolationMode="HighQuality" VerticalAlignment="Center"/>
+                    <TextBlock Text="BRIDGE" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" LetterSpacing="1.5" VerticalAlignment="Center"/>
+                    <Border Background="{DynamicResource PanelBrush}" CornerRadius="4" Padding="5,1" VerticalAlignment="Center">
+                        <TextBlock Text="WORKSTATION" FontSize="8" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
+                    </Border>
+                </StackPanel>
+
+                <!-- Center spacer allows window dragging -->
+                <Panel Grid.Column="1" Background="Transparent"/>
+
+                <!-- Right: Window Caption Controls (Minimize, Maximize, Close) -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Stretch">
+                    <Button Classes="caption-btn" Click="OnMinimizeClicked" ToolTip.Tip="Minimize">
+                        <ic:SymbolIcon Symbol="Subtract" FontSize="12" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    </Button>
+                    <Button Classes="caption-btn" Click="OnMaximizeClicked" ToolTip.Tip="Maximize / Restore">
+                        <ic:SymbolIcon x:Name="MaximizeIcon" Symbol="Square" FontSize="11" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    </Button>
+                    <Button Classes="caption-btn caption-close" Click="OnCloseClicked" ToolTip.Tip="Close">
+                        <ic:SymbolIcon Symbol="Dismiss" FontSize="12" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Main Workstation Layout -->
+        <Grid Grid.Row="1" Background="{DynamicResource AppSurfaceBrush}" ColumnDefinitions="Auto, *">
+            <Grid.Styles>
+                <Style Selector="Button.menu-toggle">
+                    <Setter Property="Width" Value="36"/>
+                    <Setter Property="Height" Value="36"/>
+                    <Setter Property="Padding" Value="0"/>
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="BorderBrush" Value="Transparent"/>
+                    <Setter Property="BorderThickness" Value="0"/>
+                    <Setter Property="CornerRadius" Value="6"/>
+                    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                </Style>
+                <Style Selector="Button.sidebar-toggle-btn">
+                    <Setter Property="Width" Value="32"/>
+                    <Setter Property="Height" Value="32"/>
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="BorderBrush" Value="Transparent"/>
+                    <Setter Property="BorderThickness" Value="0"/>
+                    <Setter Property="CornerRadius" Value="6"/>
+                    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                    <Setter Property="Padding" Value="0"/>
+                    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                    <Setter Property="VerticalContentAlignment" Value="Center"/>
+                </Style>
+                <Style Selector="Button.sidebar-toggle-btn:pointerover">
+                    <Setter Property="Background" Value="{DynamicResource PanelRaisedBrush}"/>
+                    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                </Style>
+                <Style Selector="Button.nav-item">
+                    <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="BorderBrush" Value="Transparent"/>
+                    <Setter Property="BorderThickness" Value="1"/>
+                    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                    <Setter Property="Height" Value="36"/>
+                    <Setter Property="Padding" Value="0"/>
+                    <Setter Property="FontSize" Value="12"/>
+                    <Setter Property="CornerRadius" Value="7"/>
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                    <Setter Property="VerticalContentAlignment" Value="Center"/>
+                </Style>
+                <Style Selector="Button.nav-item TextBlock">
+                    <Setter Property="VerticalAlignment" Value="Center"/>
+                    <Setter Property="FontSize" Value="12"/>
+                </Style>
+                <Style Selector="Button.nav-item:pointerover">
+                    <Setter Property="Background" Value="{DynamicResource PanelRaisedBrush}"/>
+                    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                </Style>
+                <Style Selector="Button.nav-item.nav-active">
+                    <Setter Property="Background" Value="{DynamicResource SidebarActiveBrush}"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource SidebarActiveBorderBrush}"/>
+                    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                    <Setter Property="FontWeight" Value="SemiBold"/>
+                </Style>
+                <Style Selector="Button.nav-item.nav-active:pointerover">
+                    <Setter Property="Background" Value="{DynamicResource SidebarActiveHoverBrush}"/>
+                </Style>
+                <Style Selector="Button.nav-item.nav-active TextBlock">
+                    <Setter Property="Foreground" Value="{DynamicResource TextWhiteBrush}"/>
+                    <Setter Property="FontWeight" Value="SemiBold"/>
+                </Style>
+                <Style Selector="Border.active-bar">
+                    <Setter Property="Opacity" Value="0"/>
+                </Style>
+                <Style Selector="Button.nav-item.nav-active Border.active-bar">
+                    <Setter Property="Opacity" Value="1"/>
+                </Style>
+            </Grid.Styles>
+
+        <!-- Sidebar Navigation Pane -->
+        <Border Grid.Column="0" Grid.RowSpan="2" Width="{Binding NavigationPaneWidth}" Background="{DynamicResource SidebarBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,1,0">
+            <Grid RowDefinitions="Auto, *, Auto" Margin="8,14,8,14">
+                
+                <!-- Row 0: Sidebar Header (Logo removed; Clean panel toggle) -->
+                <Grid Grid.Row="0" Margin="0,0,0,14">
+                    <!-- Expanded Header: Section title + Collapse toggle -->
+                    <Grid ColumnDefinitions="*, Auto" IsVisible="{Binding IsNavigationPaneOpen}" VerticalAlignment="Center">
+                        <TextBlock Grid.Column="0" Text="WORKSTATION" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextMutedBrush}" LetterSpacing="1.5" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                        <Button Grid.Column="1" Classes="sidebar-toggle-btn" Command="{Binding ToggleNavigationPaneCommand}" ToolTip.Tip="Collapse sidebar" VerticalAlignment="Center">
+                            <ic:SymbolIcon Symbol="PanelLeftContract" FontSize="15" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Button>
+                    </Grid>
+
+                    <!-- Collapsed Header: Centered Expand toggle -->
+                    <Button Classes="sidebar-toggle-btn" 
+                            Command="{Binding ToggleNavigationPaneCommand}" 
+                            ToolTip.Tip="Expand sidebar" 
+                            HorizontalAlignment="Center" 
+                            VerticalAlignment="Center"
+                            IsVisible="{Binding !IsNavigationPaneOpen}">
+                        <ic:SymbolIcon Symbol="PanelLeftExpand" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Button>
+                </Grid>
+
+                <!-- Row 1: Categorized Navigation Items -->
+                <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="3">
+                        <!-- Group: Core Lifecycle -->
+                        <TextBlock Text="LIFECYCLE" 
+                                   FontSize="9" 
+                                   FontWeight="Bold" 
+                                   Foreground="{DynamicResource TextMutedBrush}" 
+                                   LetterSpacing="1.2" 
+                                   Margin="8,2,0,4"
+                                   IsVisible="{Binding IsNavigationPaneOpen}"/>
+
+                        <Button Classes="nav-item" Classes.nav-active="{Binding IsDashboardSelected}" Command="{Binding NavigateCommand}" CommandParameter="Dashboard" ToolTip.Tip="Overview" AutomationProperties.Name="Overview">
+                            <Grid ColumnDefinitions="3, 28, *">
+                                <Border Classes="active-bar" Grid.Column="0" Width="3" Height="16" CornerRadius="1.5" Background="{DynamicResource AccentBrush}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                <ic:SymbolIcon Grid.Column="1" Symbol="Grid" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="2" Text="Overview" IsVisible="{Binding IsNavigationPaneOpen}" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Button>
+
+                        <Button Classes="nav-item" Classes.nav-active="{Binding IsDeploySelected}" Command="{Binding NavigateCommand}" CommandParameter="Deploy" ToolTip.Tip="Deploy" AutomationProperties.Name="Deploy">
+                            <Grid ColumnDefinitions="3, 28, *">
+                                <Border Classes="active-bar" Grid.Column="0" Width="3" Height="16" CornerRadius="1.5" Background="{DynamicResource AccentBrush}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                <ic:SymbolIcon Grid.Column="1" Symbol="Rocket" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="2" Text="Deploy" IsVisible="{Binding IsNavigationPaneOpen}" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Button>
+
+                        <Button Classes="nav-item" Classes.nav-active="{Binding IsPatchSelected}" Command="{Binding NavigateCommand}" CommandParameter="Patch" ToolTip.Tip="Patch" AutomationProperties.Name="Patch">
+                            <Grid ColumnDefinitions="3, 28, *">
+                                <Border Classes="active-bar" Grid.Column="0" Width="3" Height="16" CornerRadius="1.5" Background="{DynamicResource AccentBrush}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                <ic:SymbolIcon Grid.Column="1" Symbol="Edit" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="2" Text="Patch" IsVisible="{Binding IsNavigationPaneOpen}" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Button>
+
+                        <!-- Group Divider -->
+                        <Rectangle Height="1" Fill="{DynamicResource DividerBrush}" Margin="6,6,6,6"/>
+
+                        <!-- Group: Infrastructure -->
+                        <TextBlock Text="INFRASTRUCTURE" 
+                                   FontSize="9" 
+                                   FontWeight="Bold" 
+                                   Foreground="{DynamicResource TextMutedBrush}" 
+                                   LetterSpacing="1.2" 
+                                   Margin="8,2,0,4"
+                                   IsVisible="{Binding IsNavigationPaneOpen}"/>
+
+                        <Button Classes="nav-item" Classes.nav-active="{Binding IsDockerSelected}" Command="{Binding NavigateCommand}" CommandParameter="Docker" ToolTip.Tip="Docker Containers" AutomationProperties.Name="Docker">
+                            <Grid ColumnDefinitions="3, 28, *">
+                                <Border Classes="active-bar" Grid.Column="0" Width="3" Height="16" CornerRadius="1.5" Background="{DynamicResource AccentBrush}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                <ic:SymbolIcon Grid.Column="1" Symbol="Cube" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="2" Text="Containers" IsVisible="{Binding IsNavigationPaneOpen}" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Button>
+
+                        <Button Classes="nav-item" Classes.nav-active="{Binding IsDatabaseSelected}" Command="{Binding NavigateCommand}" CommandParameter="Database" ToolTip.Tip="Database &amp; Backups" AutomationProperties.Name="Database">
+                            <Grid ColumnDefinitions="3, 28, *">
+                                <Border Classes="active-bar" Grid.Column="0" Width="3" Height="16" CornerRadius="1.5" Background="{DynamicResource AccentBrush}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                <ic:SymbolIcon Grid.Column="1" Symbol="Database" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="2" Text="Database" IsVisible="{Binding IsNavigationPaneOpen}" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Button>
+
+                        <Button Classes="nav-item" Classes.nav-active="{Binding IsTerminalSelected}" Command="{Binding NavigateCommand}" CommandParameter="Terminal" ToolTip.Tip="SSH Terminal" AutomationProperties.Name="SSH terminal">
+                            <Grid ColumnDefinitions="3, 28, *">
+                                <Border Classes="active-bar" Grid.Column="0" Width="3" Height="16" CornerRadius="1.5" Background="{DynamicResource AccentBrush}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                <ic:SymbolIcon Grid.Column="1" Symbol="DeveloperBoard" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="2" Text="Terminal" IsVisible="{Binding IsNavigationPaneOpen}" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Button>
+
+                        <Button Classes="nav-item" Classes.nav-active="{Binding IsSetupSelected}" Command="{Binding NavigateCommand}" CommandParameter="Setup" ToolTip.Tip="Server Setup &amp; Provisioning" AutomationProperties.Name="Setup">
+                            <Grid ColumnDefinitions="3, 28, *">
+                                <Border Classes="active-bar" Grid.Column="0" Width="3" Height="16" CornerRadius="1.5" Background="{DynamicResource AccentBrush}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                <ic:SymbolIcon Grid.Column="1" Symbol="Wrench" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="2" Text="Setup" IsVisible="{Binding IsNavigationPaneOpen}" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Button>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- Row 2: Status & Settings Footer -->
+                <StackPanel Grid.Row="2" Spacing="6" Margin="0,8,0,0">
+                    <!-- Expanded Status Card -->
+                    <Border IsVisible="{Binding IsNavigationPaneOpen}" 
+                            Background="{DynamicResource PanelBrush}" 
+                            BorderBrush="{DynamicResource DividerBrush}" 
+                            BorderThickness="1" 
+                            CornerRadius="8" 
+                            Padding="10,8">
+                        <Grid ColumnDefinitions="Auto, *">
+                            <Ellipse Width="7" Height="7" Fill="{DynamicResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                <TextBlock Text="CONTROL PLANE" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource TextMutedBrush}" LetterSpacing="0.8"/>
+                                <TextBlock Text="Ready for operations" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="11" FontWeight="SemiBold"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Collapsed Status Dot Tooltip -->
+                    <Border IsVisible="{Binding !IsNavigationPaneOpen}"
+                            Width="26" Height="26"
+                            CornerRadius="13"
+                            Background="{DynamicResource PanelBrush}"
+                            BorderBrush="{DynamicResource DividerBrush}"
+                            BorderThickness="1"
+                            HorizontalAlignment="Center"
+                            ToolTip.Tip="Control Plane: Online">
+                        <Ellipse Width="6" Height="6" Fill="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+
+                    <!-- Settings Button -->
+                    <Button Classes="nav-item" Classes.nav-active="{Binding IsSettingsSelected}" Command="{Binding NavigateCommand}" CommandParameter="Settings" ToolTip.Tip="Settings" AutomationProperties.Name="Settings">
+                        <Grid ColumnDefinitions="3, 28, *">
+                            <Border Classes="active-bar" Grid.Column="0" Width="3" Height="16" CornerRadius="1.5" Background="{DynamicResource AccentBrush}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                            <ic:SymbolIcon Grid.Column="1" Symbol="Settings" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="2" Text="Settings" IsVisible="{Binding IsNavigationPaneOpen}" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                        </Grid>
+                    </Button>
+
+                    <!-- Version Tagline -->
+                    <TextBlock Text="BRIDGE WORKSTATION  •  v1.0" IsVisible="{Binding IsNavigationPaneOpen}" FontSize="9" FontWeight="Medium" Foreground="{DynamicResource TextMutedBrush}" Margin="8,2,0,0" LetterSpacing="0.5"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Column="1" Grid.Row="0" RowDefinitions="Auto, Auto, *" Margin="24,16,24,20">
+            <!-- Row 0: Active Operation Warning / Lock Banner -->
+            <Border Grid.Row="0"
+                    IsVisible="{Binding IsOperationLocked}"
+                    Background="#26382005"
+                    BorderBrush="#B2A15B00"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="14,8"
+                    Margin="0,0,0,12">
+                <Grid ColumnDefinitions="Auto, *">
+                    <ic:SymbolIcon Grid.Column="0" Symbol="LockClosed" FontSize="15" Foreground="#FFB74D" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                        <TextBlock Text="Operation in Progress:" FontWeight="Bold" FontSize="11" Foreground="#FFB74D" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding ActiveOperationDescription}" FontSize="11" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Text="— Server switching is safely locked until completion." FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Row 1: Top Bar: VPS Profiles Tabs (Left) + Persistent Global Connection Controls (Right) -->
+            <Grid Grid.Row="1" ColumnDefinitions="*, Auto" Margin="0,0,0,16" VerticalAlignment="Center">
+                
+                <!-- Left: Multi-VPS Profile Tabs -->
+                <ScrollViewer Grid.Column="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Margin="0,0,16,0" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <ListBox Classes="vps-tabs" 
+                                 ItemsSource="{Binding DashboardVM.VpsProfiles}" 
+                                 SelectedItem="{Binding DashboardVM.SelectedVps}"
+                                 IsEnabled="{Binding !IsOperationLocked}">
+                            <ListBox.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" Spacing="6"/>
+                                </ItemsPanelTemplate>
+                            </ListBox.ItemsPanel>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Classes="vps-tab-pill" CornerRadius="8" Padding="12,6">
+                                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                            <!-- Indicator dot when selected -->
+                                            <Ellipse Width="7" Height="7"
+                                                     Fill="{Binding $parent[Window].DataContext.DashboardVM.Connection.StatusText, Converter={StaticResource ConnectionStatusToBrushConverter}, ConverterParameter=Indicator}"
+                                                     IsVisible="{Binding $parent[ListBoxItem].IsSelected}"
+                                                     VerticalAlignment="Center"/>
+                                            <!-- Muted dot when unselected -->
+                                            <TextBlock Text="●" FontSize="7"
+                                                       Foreground="{DynamicResource TextMutedBrush}"
+                                                       IsVisible="{Binding !$parent[ListBoxItem].IsSelected}"
+                                                       VerticalAlignment="Center"/>
+                                            <!-- Profile Name -->
+                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="12"
+                                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                                       VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                            <!-- IP Pill Badge -->
+                                            <Border Background="{DynamicResource HeaderBadgeBackgroundBrush}" CornerRadius="4" Padding="5,1" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding VpsIp}" FontSize="10"
+                                                           FontFamily="Cascadia Mono, Consolas, Monospace"
+                                                           Foreground="{DynamicResource TextSecondaryBrush}"
+                                                           VerticalAlignment="Center"/>
+                                            </Border>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        <Button Command="{Binding AddVpsCommand}" 
+                                Classes="add-vps-pill" 
+                                ToolTip.Tip="Register new VPS profile" 
+                                VerticalAlignment="Center"
+                                IsEnabled="{Binding !IsOperationLocked}">
+                            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                <ic:SymbolIcon Symbol="Add" FontSize="13" VerticalAlignment="Center"/>
+                                <TextBlock Text="Add VPS" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- Right: Global SSH Session Status & Action Capsule -->
+                <Border Grid.Column="1" 
+                        Background="{DynamicResource PanelBrush}" 
+                        BorderBrush="{DynamicResource DividerBrush}" 
+                        BorderThickness="1" 
+                        CornerRadius="8" 
+                        Padding="10,5" 
+                        VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                        <!-- Connected VPS Name & Connection Status Badge (Colored Background determines status) -->
+                        <Border Background="{Binding DashboardVM.Connection.StatusText, Converter={StaticResource ConnectionStatusToBrushConverter}, ConverterParameter=Background}"
+                                BorderBrush="{Binding DashboardVM.Connection.StatusText, Converter={StaticResource ConnectionStatusToBrushConverter}, ConverterParameter=Border}"
+                                BorderThickness="1"
+                                CornerRadius="6"
+                                Padding="8,3"
+                                VerticalAlignment="Center"
+                                ToolTip.Tip="{Binding DashboardVM.Connection.StatusText}">
+                            <StackPanel Orientation="Horizontal" Spacing="7" VerticalAlignment="Center">
+                                <Ellipse Width="7" Height="7" 
+                                         Fill="{Binding DashboardVM.Connection.StatusText, Converter={StaticResource ConnectionStatusToBrushConverter}, ConverterParameter=Indicator}" 
+                                         VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding DashboardVM.SelectedVps.Name, FallbackValue='No Server'}" 
+                                           FontWeight="SemiBold" 
+                                           FontSize="11" 
+                                           Foreground="{DynamicResource TextPrimaryBrush}" 
+                                           VerticalAlignment="Center"/>
+                                <!-- Target Host Badge -->
+                                <Border Background="{DynamicResource HeaderBadgeBackgroundBrush}" CornerRadius="4" Padding="5,1" VerticalAlignment="Center"
+                                        IsVisible="{Binding DashboardVM.SelectedVps, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                    <TextBlock Text="{Binding DashboardVM.Connection.TargetSummary}" 
+                                               FontSize="10" 
+                                               FontFamily="Cascadia Mono, Consolas, Monospace" 
+                                               Foreground="{DynamicResource TextSecondaryBrush}" 
+                                               VerticalAlignment="Center"/>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Subtle Divider line -->
+                        <Rectangle Width="1" Height="18" Fill="{DynamicResource DividerBrush}" VerticalAlignment="Center"/>
+
+                        <!-- Password prompt if credentials required -->
+                        <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding DashboardVM.Connection.IsCredentialPromptVisible}" VerticalAlignment="Center">
+                            <TextBox Text="{Binding DashboardVM.Connection.Password}" PasswordChar="•"
+                                     PlaceholderText="SSH password" FontSize="11" Padding="7,3" MinWidth="120"
+                                     AutomationProperties.Name="Header SSH password"/>
+                            <Button Classes="pill-btn" Command="{Binding DashboardVM.Connection.ConnectCommand}"
+                                    Background="{DynamicResource AccentStrongBrush}" Foreground="White"
+                                    Padding="10,5" FontSize="11" FontWeight="SemiBold">
+                                <TextBlock Text="Login" VerticalAlignment="Center"/>
+                            </Button>
+                        </StackPanel>
+
+                        <!-- Disconnected state: Connect Button -->
+                        <Button Classes="pill-btn" 
+                                Command="{Binding DashboardVM.Connection.ConnectCommand}"
+                                IsEnabled="{Binding !DashboardVM.Connection.IsConnecting}"
+                                IsVisible="{Binding !DashboardVM.Connection.IsConnected}"
+                                Background="{DynamicResource AccentStrongBrush}"
+                                Foreground="White"
+                                Padding="12,5"
+                                FontSize="11"
+                                FontWeight="SemiBold"
+                                ToolTip.Tip="Connect SSH session">
+                            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                <ic:SymbolIcon Symbol="Flash" FontSize="12" VerticalAlignment="Center"/>
+                                <TextBlock Text="Connect" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Connected state: Quick Reconnect & Disconnect -->
+                        <StackPanel Orientation="Horizontal" Spacing="5" IsVisible="{Binding DashboardVM.Connection.IsConnected}" VerticalAlignment="Center">
+                            <Button Classes="pill-btn" 
+                                    Command="{Binding DashboardVM.Connection.ConnectCommand}"
+                                    IsEnabled="{Binding !DashboardVM.Connection.IsConnecting}"
+                                    Padding="8,5"
+                                    FontSize="11"
+                                    ToolTip.Tip="Reconnect SSH session">
+                                <ic:SymbolIcon Symbol="ArrowCounterclockwise" FontSize="12" VerticalAlignment="Center"/>
+                            </Button>
+                            <Button Classes="pill-btn" 
+                                    Command="{Binding DashboardVM.Connection.DisconnectCommand}"
+                                    Background="{DynamicResource DangerSurfaceBrush}"
+                                    Foreground="{DynamicResource DangerTextBrush}"
+                                    BorderBrush="{DynamicResource DividerBrush}"
+                                    Padding="11,5"
+                                    FontSize="11"
+                                    FontWeight="SemiBold"
+                                    ToolTip.Tip="Disconnect SSH session">
+                                <TextBlock Text="Disconnect" VerticalAlignment="Center"/>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
+            <Grid.Styles>
+                <Style Selector="ListBox.vps-tabs">
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="BorderThickness" Value="0"/>
+                    <Setter Property="Padding" Value="0"/>
+                </Style>
+                <Style Selector="ListBox.vps-tabs > ListBoxItem">
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="BorderThickness" Value="0"/>
+                    <Setter Property="Padding" Value="0"/>
+                    <Setter Property="Margin" Value="0"/>
+                    <Setter Property="CornerRadius" Value="8"/>
+                </Style>
+                <Style Selector="ListBox.vps-tabs > ListBoxItem Border.vps-tab-pill">
+                    <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}"/>
+                    <Setter Property="BorderThickness" Value="1"/>
+                </Style>
+                <Style Selector="ListBox.vps-tabs > ListBoxItem:pointerover Border.vps-tab-pill">
+                    <Setter Property="Background" Value="{DynamicResource PanelRaisedBrush}"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource AccentStrongBrush}"/>
+                </Style>
+                <Style Selector="ListBox.vps-tabs > ListBoxItem:selected Border.vps-tab-pill">
+                    <Setter Property="Background" Value="{DynamicResource TabSelectedBackgroundBrush}"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                    <Setter Property="BorderThickness" Value="1"/>
+                </Style>
+                <Style Selector="Button.add-vps-pill">
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}"/>
+                    <Setter Property="BorderThickness" Value="1"/>
+                    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                    <Setter Property="Padding" Value="11,6"/>
+                    <Setter Property="CornerRadius" Value="8"/>
+                </Style>
+                <Style Selector="Button.add-vps-pill:pointerover">
+                    <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                </Style>
+            </Grid.Styles>
+            <ContentControl Grid.Row="2" Content="{Binding CurrentView}">
+                <ContentControl.DataTemplates>
+                    <!-- Dashboard Template (First Tab) -->
+                    <DataTemplate DataType="{x:Type vm:DashboardViewModel}">
+                        <views:DashboardView/>
+                    </DataTemplate>
+
+                    <!-- Workflow Tab Templates -->
+                    <DataTemplate DataType="{x:Type vm:DeployViewModel}">
+                        <views:DeployView/>
+                    </DataTemplate>
+                    <DataTemplate DataType="{x:Type vm:PatchViewModel}">
+                        <views:PatchView/>
+                    </DataTemplate>
+                    <DataTemplate DataType="{x:Type vm:DatabaseViewModel}">
+                        <views:DatabaseView/>
+                    </DataTemplate>
+                    <DataTemplate DataType="{x:Type vm:DockerViewModel}">
+                        <views:DockerView/>
+                    </DataTemplate>
+
+                    <DataTemplate DataType="{x:Type vm:TerminalViewModel}">
+                        <views:TerminalView/>
+                    </DataTemplate>
+                    <DataTemplate DataType="{x:Type vm:SetupViewModel}">
+                        <views:SetupView/>
+                    </DataTemplate>
+
+                    <!-- Settings View Template (Last Tab) -->
+                    <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
+                        <views:SettingsView/>
+                    </DataTemplate>
+                </ContentControl.DataTemplates>
+            </ContentControl>
+        </Grid>
+    </Grid>
+</Grid>
+</Window>

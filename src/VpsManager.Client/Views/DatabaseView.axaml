@@ -1,0 +1,750 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:VpsManager.Client.ViewModels"
+             xmlns:models="using:VpsManager.Core.Models"
+             xmlns:controls="using:VpsManager.Client.Controls"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="950"
+             x:Class="VpsManager.Client.Views.DatabaseView"
+             x:DataType="vm:DatabaseViewModel"
+             x:Name="Root"
+             Background="{DynamicResource AppSurfaceBrush}">
+
+    <UserControl.Styles>
+        <!-- Scope switcher pills -->
+        <Style Selector="RadioButton.scope-pill">
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="RadioButton.scope-pill:checked">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+
+        <!-- Preset Chips -->
+        <Style Selector="Button.preset-chip">
+            <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="8,3"/>
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
+                    <BrushTransition Property="Foreground" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.preset-chip:pointerover">
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        </Style>
+
+        <!-- Status Badges -->
+        <Style Selector="Border.status-badge">
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="6,1"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="Border.status-badge.success">
+            <Setter Property="Background" Value="{DynamicResource SuccessSurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SuccessBorderBrush}"/>
+        </Style>
+        <Style Selector="Border.status-badge.success TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+        </Style>
+        <Style Selector="Border.status-badge.failed">
+            <Setter Property="Background" Value="{DynamicResource DangerSurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DangerBorderBrush}"/>
+        </Style>
+        <Style Selector="Border.status-badge.failed TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource DangerBrush}"/>
+        </Style>
+
+        <!-- Connection indicators -->
+        <Style Selector="TextBlock.connected">
+            <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+        </Style>
+        <Style Selector="TextBlock.disconnected">
+            <Setter Property="Foreground" Value="{DynamicResource DangerBrush}"/>
+        </Style>
+
+        <!-- ListBox Items -->
+        <Style Selector="ListBox">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+        </Style>
+        <Style Selector="ListBoxItem">
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+        <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="Auto, Auto, *" Margin="20,16,20,14" RowSpacing="12" ClipToBounds="True">
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             ROW 0: Top Header & Stack Control Strip (Responsive 2-Line Layout)
+             ═══════════════════════════════════════════════════════════════════ -->
+        <Grid Grid.Row="0" RowDefinitions="Auto, Auto" RowSpacing="10" ClipToBounds="True">
+            <!-- Line 1: Title, Badges, and Status Indicator -->
+            <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto" VerticalAlignment="Center">
+                <!-- Left: Title + Target Profile + Connection Indicator -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                    <TextBlock Text="Database &amp; Backups Vault" FontSize="20" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+
+                    <!-- Target Profile Badge -->
+                    <Border Background="{DynamicResource PanelRaisedBrush}" BorderBrush="{DynamicResource DividerBrush}"
+                            BorderThickness="1" CornerRadius="6" Padding="8,4" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <TextBlock Text="Target:" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBlock Text="{Binding ProfileName}" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource AccentTeal}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Live SSH / Connection Status Badge -->
+                    <Border Background="{DynamicResource PanelRaisedBrush}" BorderBrush="{DynamicResource DividerBrush}"
+                            BorderThickness="1" CornerRadius="6" Padding="8,4" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <Ellipse Width="7" Height="7" Fill="{DynamicResource SuccessBrush}" IsVisible="{Binding IsConnected}" VerticalAlignment="Center"/>
+                            <Ellipse Width="7" Height="7" Fill="{DynamicResource DangerBrush}" IsVisible="{Binding !IsConnected}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding ConnectionStatusText}" FontSize="10" FontWeight="SemiBold"
+                                       Classes.connected="{Binding IsConnected}"
+                                       Classes.disconnected="{Binding !IsConnected}"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Right: Status Message and Progress Bar -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding StatusMessage}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
+                               VerticalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="380"/>
+
+                    <!-- Progress Bar (Determinate for downloads, Indeterminate for backups) -->
+                    <ProgressBar Width="60" Height="4" VerticalAlignment="Center"
+                                 IsVisible="{Binding IsBusy}"
+                                 IsIndeterminate="{Binding !IsDownloading}"
+                                 Value="{Binding DownloadProgressPercent}"
+                                 Minimum="0" Maximum="100"
+                                 Foreground="{DynamicResource AccentBrush}"/>
+
+                    <!-- Cancel button when busy -->
+                    <Button Classes="pill-btn danger" Command="{Binding CancelOperationCommand}"
+                            IsVisible="{Binding IsBusy}" ToolTip.Tip="Cancel active operation"
+                            Padding="6,3" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <ic:SymbolIcon Symbol="Dismiss" FontSize="11" VerticalAlignment="Center"/>
+                            <TextBlock Text="Cancel" FontSize="10" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <!-- Line 2: Scope Switcher Pills (Left) and Action Buttons (Right) Aligned in ONE Row -->
+            <Grid Grid.Row="1" ColumnDefinitions="Auto, *, Auto" VerticalAlignment="Center">
+                <!-- Scope Switcher Pills -->
+                <Border Grid.Column="0" Background="{DynamicResource PanelRaisedBrush}" CornerRadius="6" Padding="3"
+                        BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
+                        <RadioButton Classes="scope-pill"
+                                     Content="Database Dump"
+                                     IsChecked="{Binding IsDatabaseScopeSelected}"
+                                     GroupName="DbBackupScope"
+                                     ToolTip.Tip="Backup containerized or local database engine"/>
+                        <RadioButton Classes="scope-pill"
+                                     Content="Folder / Media"
+                                     IsChecked="{Binding IsFolderScopeSelected}"
+                                     GroupName="DbBackupScope"
+                                     ToolTip.Tip="Archive remote uploads or filesystem assets"/>
+                        <RadioButton Classes="scope-pill"
+                                     Content="Full Project"
+                                     IsChecked="{Binding IsFullScopeSelected}"
+                                     GroupName="DbBackupScope"
+                                     ToolTip.Tip="Combined snapshot of database and media assets"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Action Buttons Aligned in ONE Row on the Right -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <!-- Refresh Vault Button -->
+                    <Button Classes="pill-btn" Command="{Binding LoadAllDataCommand}"
+                            IsEnabled="{Binding !IsBusy}" ToolTip.Tip="Refresh remote backup list and cron history"
+                            VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                            <ic:SymbolIcon Symbol="ArrowSync" FontSize="12" VerticalAlignment="Center"/>
+                            <TextBlock Text="Refresh Vault" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Run Backup Button -->
+                    <Button Classes="action-btn" Command="{Binding CreateBackupCommand}"
+                            IsEnabled="{Binding !IsBusy}" Background="{DynamicResource AccentStrongBrush}"
+                            Foreground="{DynamicResource TextWhiteBrush}" ToolTip.Tip="Execute remote backup now"
+                            VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <ic:SymbolIcon Symbol="Play" FontSize="12" VerticalAlignment="Center"/>
+                            <TextBlock Text="Run Backup Now" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Grid>
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             ROW 1: 3-Column Datacenter Telemetry & Vault Cards
+             ═══════════════════════════════════════════════════════════════════ -->
+        <Grid Grid.Row="1" ColumnDefinitions="*, *, *" ColumnSpacing="12" ClipToBounds="True">
+
+            <!-- Card 1: Vault Storage & Health -->
+            <Border Grid.Column="0" Classes="stat-card" Padding="14" ClipToBounds="True">
+                <Grid RowDefinitions="Auto, Auto, *, Auto" RowSpacing="6">
+                    <Grid Grid.Row="0" ColumnDefinitions="Auto, Auto, *" ColumnSpacing="6">
+                        <ic:SymbolIcon Symbol="Archive" FontSize="14" Foreground="{DynamicResource AccentTeal}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="VAULT STORAGE &amp; REPO" FontSize="10" FontWeight="Bold" LetterSpacing="0.5"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                        <Border Grid.Column="2" Background="{DynamicResource MetricBadgeBackgroundBrush}"
+                                BorderBrush="{DynamicResource MetricBadgeBorderBrush}" BorderThickness="1"
+                                CornerRadius="4" Padding="6,1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding TotalBackupsCount, StringFormat='{}{0} Snapshots'}" FontSize="10"
+                                       Foreground="{DynamicResource AccentTeal}" FontWeight="SemiBold"/>
+                        </Border>
+                    </Grid>
+
+                    <Grid Grid.Row="1" ColumnDefinitions="*, Auto" ColumnSpacing="8" VerticalAlignment="Center" Margin="0,2">
+                        <TextBlock Text="{Binding FormattedTotalVaultSize}" FontSize="16" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+                        <Border Grid.Column="1" Background="{DynamicResource MetricBadgeBackgroundBrush}"
+                                BorderBrush="{DynamicResource MetricBadgeBorderBrush}" BorderThickness="1"
+                                CornerRadius="6" Padding="6,2" VerticalAlignment="Center">
+                            <TextBlock Text="Remote Vault" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource AccentTeal}"/>
+                        </Border>
+                    </Grid>
+
+                    <Border Grid.Row="2" Background="{DynamicResource PanelBrush}" CornerRadius="6" Padding="8,5" Margin="0,2">
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="Vault Path: /var/backups/vpsmanager" FontSize="10"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" FontFamily="Cascadia Mono, Consolas, Monospace" TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Text="{Binding TotalBackupsCount, StringFormat='Indexed Archives: {0}'}" FontSize="10"
+                                       Foreground="{DynamicResource TextMutedBrush}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Grid Grid.Row="3" ColumnDefinitions="*, Auto">
+                        <TextBlock Text="Latest Snapshot" FontSize="10" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{Binding LatestBackupDateText}" FontSize="10" FontWeight="Bold"
+                                   Foreground="{DynamicResource AccentTeal}" VerticalAlignment="Center"/>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- Card 2: Database Engine & Target Context -->
+            <Border Grid.Column="1" Classes="stat-card" Padding="14" ClipToBounds="True">
+                <Grid RowDefinitions="Auto, Auto, *, Auto" RowSpacing="6">
+                    <Grid Grid.Row="0" ColumnDefinitions="Auto, Auto, *" ColumnSpacing="6">
+                        <ic:SymbolIcon Symbol="Database" FontSize="14" Foreground="{DynamicResource MetricCpuWaveBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="DATABASE CONTEXT" FontSize="10" FontWeight="Bold" LetterSpacing="0.5"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                        <Border Grid.Column="2" Background="{DynamicResource MetricBadgeBackgroundBrush}"
+                                BorderBrush="{DynamicResource MetricBadgeBorderBrush}" BorderThickness="1"
+                                CornerRadius="4" Padding="6,1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding SelectedEngine}" FontSize="10"
+                                       Foreground="{DynamicResource MetricCpuWaveBrush}" FontWeight="SemiBold"/>
+                        </Border>
+                    </Grid>
+
+                    <Grid Grid.Row="1" ColumnDefinitions="*, Auto" ColumnSpacing="8" VerticalAlignment="Center" Margin="0,2">
+                        <TextBlock Text="{Binding DbName}" FontSize="15" FontWeight="Bold"
+                                   FontFamily="Cascadia Mono, Consolas, Monospace"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+                        <Border Grid.Column="1" Background="{DynamicResource MetricBadgeBackgroundBrush}"
+                                BorderBrush="{DynamicResource MetricBadgeBorderBrush}" BorderThickness="1"
+                                CornerRadius="6" Padding="6,2" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding DbContainerName, StringFormat='Container: {0}'}"
+                                       FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource MetricCpuWaveBrush}"/>
+                        </Border>
+                    </Grid>
+
+                    <Border Grid.Row="2" Background="{DynamicResource PanelBrush}" CornerRadius="6" Padding="8,5" Margin="0,2">
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="{Binding DbUser, StringFormat='DB User: {0}'}" FontSize="10"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Text="Auth Mode: Stdin Streamed (Encrypted)" FontSize="10"
+                                       Foreground="{DynamicResource TextMutedBrush}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Grid Grid.Row="3" ColumnDefinitions="*, Auto">
+                        <TextBlock Text="Target Scope" FontSize="10" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{Binding SelectedScope}" FontSize="10" FontWeight="Bold"
+                                   Foreground="{DynamicResource MetricCpuWaveBrush}" VerticalAlignment="Center"/>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- Card 3: Automated Scheduling & Integrity -->
+            <Border Grid.Column="2" Classes="stat-card" Padding="14" ClipToBounds="True">
+                <Grid RowDefinitions="Auto, Auto, *, Auto" RowSpacing="6">
+                    <Grid Grid.Row="0" ColumnDefinitions="Auto, Auto, *" ColumnSpacing="6">
+                        <ic:SymbolIcon Symbol="ShieldCheckmark" FontSize="14" Foreground="{DynamicResource MetricDiskOrchidBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="AUTOMATION &amp; INTEGRITY" FontSize="10" FontWeight="Bold" LetterSpacing="0.5"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                        <Border Grid.Column="2" Background="{DynamicResource MetricBadgeBackgroundBrush}"
+                                BorderBrush="{DynamicResource MetricBadgeBorderBrush}" BorderThickness="1"
+                                CornerRadius="4" Padding="6,1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding CronCadenceText}" FontSize="10" FontWeight="Bold"
+                                       Foreground="{DynamicResource MetricDiskOrchidBrush}"/>
+                        </Border>
+                    </Grid>
+
+                    <Grid Grid.Row="1" ColumnDefinitions="*, Auto" ColumnSpacing="8" VerticalAlignment="Center" Margin="0,2">
+                        <TextBlock Text="{Binding LastCronRunStatus, StringFormat='Cron: {0}'}" FontSize="15" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+                        <Border Grid.Column="1" Background="{DynamicResource MetricBadgeBackgroundBrush}"
+                                BorderBrush="{DynamicResource MetricBadgeBorderBrush}" BorderThickness="1"
+                                CornerRadius="6" Padding="6,2" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding CronSchedule}" FontSize="10" FontWeight="SemiBold"
+                                       FontFamily="Cascadia Mono, Consolas, Monospace"
+                                       Foreground="{DynamicResource MetricDiskOrchidBrush}"/>
+                        </Border>
+                    </Grid>
+
+                    <Border Grid.Row="2" Background="{DynamicResource PanelBrush}" CornerRadius="6" Padding="8,5" Margin="0,2">
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="{Binding LastMd5Hash, StringFormat='MD5: {0}'}" FontSize="10"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                       FontFamily="Cascadia Mono, Consolas, Monospace" TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Text="Systemd-creds Decrypt Runner" FontSize="10"
+                                       Foreground="{DynamicResource TextMutedBrush}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Grid Grid.Row="3" ColumnDefinitions="*, Auto">
+                        <TextBlock Text="Verification State" FontSize="10" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="MD5 Verified ✓" FontSize="10" FontWeight="Bold"
+                                   Foreground="{DynamicResource SuccessBrush}" IsVisible="{Binding HasVerifiedMd5}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="Standby" FontSize="10" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextMutedBrush}" IsVisible="{Binding !HasVerifiedMd5}" VerticalAlignment="Center"/>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             ROW 2: Main Workspace Grid (Scrollable Two Columns)
+             ═══════════════════════════════════════════════════════════════════ -->
+        <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Disabled">
+            <Grid ColumnDefinitions="1.05*, 16, 1.35*" Margin="0,0,0,16">
+
+                <!-- ───────────────────────────────────────────────────────────
+                     LEFT COLUMN: Target Configuration & Automated Scheduling
+                     ─────────────────────────────────────────────────────────── -->
+                <StackPanel Grid.Column="0" Spacing="16">
+
+                    <!-- Target Configuration Card -->
+                    <Border Classes="stat-card" Padding="16">
+                        <StackPanel Spacing="14">
+                            <Grid ColumnDefinitions="*, Auto">
+                                <TextBlock Text="BACKUP TARGET &amp; CONFIGURATION" Classes="label"
+                                           Foreground="{DynamicResource AccentTeal}" VerticalAlignment="Center"/>
+                                <Border Grid.Column="1" Background="{DynamicResource PanelRaisedBrush}" CornerRadius="6" Padding="8,3">
+                                    <TextBlock Text="{Binding SelectedScope, StringFormat='Mode: {0}'}" FontSize="10"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                </Border>
+                            </Grid>
+
+                            <!-- Database Options (visible for Database or Full Project) -->
+                            <StackPanel IsVisible="{Binding IsDatabaseOrFullScope}" Spacing="12">
+                                <TextBlock Text="DATABASE PARAMETERS" Classes="label"
+                                           Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10"/>
+
+                                <Grid ColumnDefinitions="*, 12, *">
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Target Engine" Classes="label"/>
+                                        <ComboBox ItemsSource="{Binding AvailableEngines}"
+                                                  SelectedItem="{Binding SelectedEngine}"
+                                                  HorizontalAlignment="Stretch"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Docker Container" Classes="label"/>
+                                        <TextBox Text="{Binding DbContainerName}" PlaceholderText="postgres"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <Grid ColumnDefinitions="*, 12, *">
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Database Name" Classes="label"/>
+                                        <TextBox Text="{Binding DbName}" PlaceholderText="app_db"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Username" Classes="label"/>
+                                        <TextBox Text="{Binding DbUser}" PlaceholderText="postgres"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <StackPanel>
+                                    <TextBlock Text="Password" Classes="label"/>
+                                    <TextBox Text="{Binding DbPassword}" PasswordChar="•" PlaceholderText="(Optional / Streamed securely)"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Folder Options (visible for Folder or Full Project) -->
+                            <StackPanel IsVisible="{Binding IsFolderOrFullScope}" Spacing="12">
+                                <TextBlock Text="FOLDER &amp; ASSET PARAMETERS" Classes="label"
+                                           Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10"/>
+
+                                <StackPanel>
+                                    <TextBlock Text="Remote Folder Path (Media, Uploads, Project)" Classes="label"/>
+                                    <TextBox Text="{Binding RemoteFolderPath}"
+                                             FontFamily="Cascadia Mono, Consolas, Monospace"
+                                             PlaceholderText="/var/www/myproject/storage or /var/www/uploads"/>
+                                </StackPanel>
+
+                                <StackPanel>
+                                    <TextBlock Text="Backup Archive Label" Classes="label"/>
+                                    <TextBox Text="{Binding BackupName}" PlaceholderText="uploads, media, or project_root"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Local Download Option -->
+                            <Border Background="{DynamicResource PanelRaisedBrush}" CornerRadius="8" Padding="12,10">
+                                <Grid ColumnDefinitions="Auto, *">
+                                    <CheckBox Grid.Column="0" IsChecked="{Binding DownloadToLocalAfterBackup}" VerticalAlignment="Center"/>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="8,0,0,0" Spacing="2">
+                                        <TextBlock Text="Also save a copy to local machine" FontWeight="SemiBold" FontSize="12"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                        <TextBlock Text="Prompts for a destination and downloads the archive over SFTP."
+                                                   FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <Border Height="1" Background="{DynamicResource DividerBrush}" Margin="0,4"/>
+
+                            <!-- Trigger Action Strip -->
+                            <Grid ColumnDefinitions="*, Auto">
+                                <TextBlock Text="{Binding StatusMessage}" Foreground="{DynamicResource TextSecondaryBrush}"
+                                           FontSize="11" VerticalAlignment="Center" TextWrapping="Wrap" Margin="0,0,14,0"/>
+                                <Button Grid.Column="1" Classes="action-btn"
+                                        Background="{DynamicResource AccentStrongBrush}"
+                                        Foreground="{DynamicResource TextWhiteBrush}"
+                                        Command="{Binding CreateBackupCommand}"
+                                        IsEnabled="{Binding !IsBusy}">
+                                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                        <ic:SymbolIcon Symbol="Play" FontSize="12" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Run Backup Now" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Automated Scheduling (Cron) Card -->
+                    <Border Classes="stat-card" Padding="16">
+                        <StackPanel Spacing="14">
+                            <Grid ColumnDefinitions="*, Auto">
+                                <TextBlock Text="AUTOMATED SCHEDULING &amp; CRON" Classes="label"
+                                           Foreground="{DynamicResource AccentTeal}" VerticalAlignment="Center"/>
+                                <Border Grid.Column="1" Background="{DynamicResource PanelRaisedBrush}" CornerRadius="6" Padding="8,3">
+                                    <TextBlock Text="{Binding CronCadenceText}" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                </Border>
+                            </Grid>
+
+                            <!-- Quick Preset Chips -->
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="Cadence Presets" Classes="label"/>
+                                <WrapPanel Orientation="Horizontal">
+                                    <Button Classes="preset-chip" Content="Daily (2 AM)"
+                                            Command="{Binding SetCronPresetCommand}" CommandParameter="0 2 * * *"
+                                            Margin="0,0,6,6"/>
+                                    <Button Classes="preset-chip" Content="Every 12h"
+                                            Command="{Binding SetCronPresetCommand}" CommandParameter="0 */12 * * *"
+                                            Margin="0,0,6,6"/>
+                                    <Button Classes="preset-chip" Content="Every 6h"
+                                            Command="{Binding SetCronPresetCommand}" CommandParameter="0 */6 * * *"
+                                            Margin="0,0,6,6"/>
+                                    <Button Classes="preset-chip" Content="Weekly (Sun)"
+                                            Command="{Binding SetCronPresetCommand}" CommandParameter="0 3 * * 0"
+                                            Margin="0,0,6,6"/>
+                                </WrapPanel>
+                            </StackPanel>
+
+                            <!-- Cron Input Field & Apply Button -->
+                            <Grid ColumnDefinitions="*, 12, Auto">
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Cron Expression" Classes="label"/>
+                                    <TextBox Text="{Binding CronSchedule}"
+                                             FontFamily="Cascadia Mono, Consolas, Monospace"
+                                             PlaceholderText="0 2 * * *"/>
+                                </StackPanel>
+                                <Button Grid.Column="2" Classes="action-btn"
+                                        Command="{Binding SetupScheduleCommand}"
+                                        IsEnabled="{Binding !IsBusy}"
+                                        VerticalAlignment="Bottom">
+                                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                        <ic:SymbolIcon Symbol="CalendarClock" FontSize="13" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Apply Schedule" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+
+                            <StackPanel Spacing="4" Margin="0,2,0,0">
+                                <TextBlock Text="• Generates a persistent runner script with automated execution history tracking."
+                                           Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11"/>
+                                <TextBlock Text="• Records success/failure, run timestamps, file sizes, and error messages to /var/backups/vpsmanager."
+                                           Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11"/>
+                                <TextBlock Text="• Passwords are encrypted on the server with systemd-creds, preventing plaintext exposure."
+                                           Foreground="{DynamicResource InfoBrush}" FontSize="11"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- ───────────────────────────────────────────────────────────
+                     RIGHT COLUMN: Vault, History, and Confirmation Banner
+                     ─────────────────────────────────────────────────────────── -->
+                <StackPanel Grid.Column="2" Spacing="16">
+
+                    <!-- Destructive Action Confirmation Banner -->
+                    <Border Background="{DynamicResource DangerSurfaceBrush}"
+                            BorderBrush="{DynamicResource DangerBorderBrush}"
+                            BorderThickness="1" CornerRadius="8" Padding="14,12"
+                            IsVisible="{Binding HasPendingAction}">
+                        <Grid RowDefinitions="Auto, Auto" RowSpacing="10">
+                            <!-- Message -->
+                            <Grid Grid.Row="0" ColumnDefinitions="Auto, *" ColumnSpacing="10" VerticalAlignment="Center">
+                                <ic:SymbolIcon Symbol="Warning" FontSize="18" Foreground="{DynamicResource DangerBrush}" VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                                    <TextBlock Text="DESTRUCTIVE OPERATION CONFIRMATION" FontWeight="Bold" FontSize="11"
+                                               Foreground="{DynamicResource DangerBrush}"/>
+                                    <TextBlock Text="{Binding StatusMessage}" FontSize="12"
+                                               Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- Action Buttons -->
+                            <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                                <!-- Restore Confirm Button -->
+                                <Button Classes="pill-btn danger" Command="{Binding ConfirmRestoreCommand}"
+                                        IsVisible="{Binding PendingRestoreBackup, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                    <StackPanel Orientation="Horizontal" Spacing="5">
+                                        <ic:SymbolIcon Symbol="ArrowCounterclockwise" FontSize="12" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Confirm Restore" FontWeight="Bold" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <!-- Delete Confirm Button -->
+                                <Button Classes="pill-btn danger" Command="{Binding ConfirmDeleteCommand}"
+                                        IsVisible="{Binding PendingDeleteBackup, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                    <StackPanel Orientation="Horizontal" Spacing="5">
+                                        <ic:SymbolIcon Symbol="Delete" FontSize="12" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Confirm Delete" FontWeight="Bold" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <!-- Cancel Button -->
+                                <Button Classes="pill-btn" Command="{Binding CancelRestoreCommand}"
+                                        IsVisible="{Binding PendingRestoreBackup, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                    <TextBlock Text="Cancel" VerticalAlignment="Center"/>
+                                </Button>
+                                <Button Classes="pill-btn" Command="{Binding CancelDeleteCommand}"
+                                        IsVisible="{Binding PendingDeleteBackup, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                    <TextBlock Text="Cancel" VerticalAlignment="Center"/>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Remote Backup Vault Card -->
+                    <Border Classes="stat-card" Padding="16">
+                        <Grid RowDefinitions="Auto, *">
+                            <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,14">
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="REMOTE BACKUP VAULT" Classes="label" Foreground="{DynamicResource AccentTeal}" Margin="0"/>
+                                    <TextBlock Text="Remote VPS storage (/var/backups/vpsmanager)" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                </StackPanel>
+                                <Border Grid.Column="1" Background="{DynamicResource MetricBadgeBackgroundBrush}"
+                                        BorderBrush="{DynamicResource MetricBadgeBorderBrush}" BorderThickness="1"
+                                        CornerRadius="6" Padding="8,3" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding TotalBackupsCount, StringFormat='{}{0} files'}"
+                                               FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource AccentTeal}"/>
+                                </Border>
+                            </Grid>
+
+                            <!-- Empty State View -->
+                            <controls:EmptyStateView Grid.Row="1"
+                                                     IsVisible="{Binding !HasBackups}"
+                                                     Icon="▤"
+                                                     Title="Backup Vault is Empty"
+                                                     Description="No remote backups found in /var/backups/vpsmanager on the active server. Run a backup above to snapshot your database or assets."
+                                                     ActionText="Refresh Vault"
+                                                     ActionCommand="{Binding LoadAllDataCommand}"/>
+
+                            <!-- Backups List -->
+                            <ListBox Grid.Row="1" IsVisible="{Binding HasBackups}" ItemsSource="{Binding Backups}" MaxHeight="360">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate x:DataType="models:DatabaseBackupInfo">
+                                        <Border Background="{DynamicResource PanelRaisedBrush}" CornerRadius="8"
+                                                Padding="12,10" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1">
+                                            <Grid ColumnDefinitions="*, Auto" ColumnSpacing="10" VerticalAlignment="Center">
+                                                <!-- Left: Icon, File Name, and Metadata -->
+                                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center">
+                                                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                                        <ic:SymbolIcon Symbol="Database" FontSize="14" Foreground="{DynamicResource AccentTeal}"
+                                                                       IsVisible="{Binding IsDatabaseScope}" VerticalAlignment="Center"/>
+                                                        <ic:SymbolIcon Symbol="FolderZip" FontSize="14" Foreground="{DynamicResource MetricCpuWaveBrush}"
+                                                                       IsVisible="{Binding IsFolderScope}" VerticalAlignment="Center"/>
+                                                        <ic:SymbolIcon Symbol="Archive" FontSize="14" Foreground="{DynamicResource MetricDiskOrchidBrush}"
+                                                                       IsVisible="{Binding IsFullScope}" VerticalAlignment="Center"/>
+
+                                                        <TextBlock Text="{Binding FileName}" FontWeight="Bold" FontSize="12"
+                                                                   FontFamily="Cascadia Mono, Consolas, Monospace"
+                                                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                                                   TextTrimming="CharacterEllipsis"/>
+                                                    </StackPanel>
+
+                                                    <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                                        <Border Background="{DynamicResource PanelBrush}" CornerRadius="4" Padding="6,2">
+                                                            <TextBlock Text="{Binding ScopeDisplayName}" FontSize="10"
+                                                                       Foreground="{DynamicResource AccentTeal}" FontWeight="SemiBold"/>
+                                                        </Border>
+                                                        <TextBlock Text="{Binding CreatedAt, StringFormat='{}{0:MMM dd, yyyy HH:mm}'}"
+                                                                   FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                                                        <TextBlock Text="{Binding FormattedSize}" FontSize="11" FontWeight="SemiBold"
+                                                                   Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+
+                                                <!-- Right: Action Buttons -->
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                                    <!-- Download to Local Button -->
+                                                    <Button Classes="pill-btn"
+                                                            Command="{Binding #Root.((vm:DatabaseViewModel)DataContext).DownloadBackupCommand}"
+                                                            CommandParameter="{Binding}"
+                                                            ToolTip.Tip="Download backup to local machine over SFTP"
+                                                            Padding="8,5">
+                                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                                            <ic:SymbolIcon Symbol="ArrowDownload" FontSize="11" VerticalAlignment="Center"/>
+                                                            <TextBlock Text="Save Local" FontSize="11" VerticalAlignment="Center"/>
+                                                        </StackPanel>
+                                                    </Button>
+
+                                                    <!-- Restore Button (Safe Request) -->
+                                                    <Button Classes="pill-btn"
+                                                            Command="{Binding #Root.((vm:DatabaseViewModel)DataContext).RequestRestoreCommand}"
+                                                            CommandParameter="{Binding}"
+                                                            ToolTip.Tip="Restore database from this backup"
+                                                            Padding="8,5">
+                                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                                            <ic:SymbolIcon Symbol="ArrowCounterclockwise" FontSize="11" VerticalAlignment="Center"/>
+                                                            <TextBlock Text="Restore" FontSize="11" VerticalAlignment="Center"/>
+                                                        </StackPanel>
+                                                    </Button>
+
+                                                    <!-- Delete Button (Safe Request) -->
+                                                    <Button Classes="pill-btn danger"
+                                                            Command="{Binding #Root.((vm:DatabaseViewModel)DataContext).RequestDeleteCommand}"
+                                                            CommandParameter="{Binding}"
+                                                            ToolTip.Tip="Delete archive from remote VPS"
+                                                            Padding="6,5">
+                                                        <ic:SymbolIcon Symbol="Delete" FontSize="12" VerticalAlignment="Center"/>
+                                                    </Button>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Grid>
+                    </Border>
+
+                    <!-- Cron Execution History Card -->
+                    <Border Classes="stat-card" Padding="16">
+                        <Grid RowDefinitions="Auto, *">
+                            <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,14">
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="CRON EXECUTION HISTORY" Classes="label" Foreground="{DynamicResource AccentTeal}" Margin="0"/>
+                                    <TextBlock Text="Automated run logs with timestamp, status, and size" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                </StackPanel>
+                                <Border Grid.Column="1" Background="{DynamicResource MetricBadgeBackgroundBrush}"
+                                        BorderBrush="{DynamicResource MetricBadgeBorderBrush}" BorderThickness="1"
+                                        CornerRadius="6" Padding="8,3" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding CronHistory.Count, StringFormat='{}{0} runs'}"
+                                               FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource AccentTeal}"/>
+                                </Border>
+                            </Grid>
+
+                            <!-- Empty State View -->
+                            <controls:EmptyStateView Grid.Row="1"
+                                                     IsVisible="{Binding CronHistory.Count, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=0}"
+                                                     Icon="⏱"
+                                                     Title="No Automated Runs Recorded"
+                                                     Description="Scheduled cron jobs log their execution status and archive sizes to /var/backups/vpsmanager/cron_history.log."
+                                                     ActionText="Refresh History"
+                                                     ActionCommand="{Binding LoadAllDataCommand}"/>
+
+                            <!-- History List -->
+                            <ListBox Grid.Row="1"
+                                     IsVisible="{Binding CronHistory.Count, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter=0}"
+                                     ItemsSource="{Binding CronHistory}" MaxHeight="240">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate x:DataType="models:CronExecutionRecord">
+                                        <Border Background="{DynamicResource PanelRaisedBrush}" CornerRadius="6"
+                                                Padding="10,8" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1">
+                                            <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="10" VerticalAlignment="Center">
+                                                <!-- Status Badge -->
+                                                <Border Grid.Column="0" Classes="status-badge"
+                                                        Classes.success="{Binding IsSuccess}"
+                                                        Classes.failed="{Binding IsFailed}"
+                                                        VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding StatusText}" FontWeight="Bold" FontSize="9"/>
+                                                </Border>
+
+                                                <!-- Details -->
+                                                <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding Scope}" FontSize="11" FontWeight="SemiBold"
+                                                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                                        <TextBlock Text="{Binding TargetName, StringFormat='({0})'}" FontSize="10"
+                                                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                    </StackPanel>
+                                                    <TextBlock Text="{Binding Message}" FontSize="10"
+                                                               Foreground="{DynamicResource TextMutedBrush}"
+                                                               TextTrimming="CharacterEllipsis"/>
+                                                </StackPanel>
+
+                                                <!-- Time & Size -->
+                                                <StackPanel Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center" Spacing="2">
+                                                    <TextBlock Text="{Binding Timestamp, StringFormat='{}{0:MMM dd HH:mm}'}" FontSize="10"
+                                                               Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Right"/>
+                                                    <TextBlock Text="{Binding FormattedSize}" FontSize="10" FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource AccentTeal}" HorizontalAlignment="Right"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Grid>
+                    </Border>
+
+                </StackPanel>
+            </Grid>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

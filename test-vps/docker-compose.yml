@@ -1,0 +1,18 @@
+services:
+  test-vps:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vps-test-node
+    ports:
+      - "2222:22"
+      - "8080:80"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - vps_data:/var/www
+      - vps_backups:/var/backups/vpsmanager
+    restart: unless-stopped
+
+volumes:
+  vps_data:
+  vps_backups:

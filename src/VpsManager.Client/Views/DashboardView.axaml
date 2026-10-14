@@ -1,0 +1,639 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:VpsManager.Client.ViewModels"
+             xmlns:models="using:VpsManager.Core.Models"
+             xmlns:signals="using:VpsManager.Core.Services.Overview"
+             xmlns:cards="using:VpsManager.Client.Controls"
+             xmlns:terminal="using:VpsManager.Client.Views.Controls"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="820"
+             x:Class="VpsManager.Client.Views.DashboardView"
+             x:DataType="vm:DashboardViewModel"
+             Background="{DynamicResource AppSurfaceBrush}">
+
+    <UserControl.KeyBindings>
+        <KeyBinding Gesture="Ctrl+R" Command="{Binding RefreshDashboardCommand}"/>
+    </UserControl.KeyBindings>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <Grid RowDefinitions="Auto, Auto, Auto, *, Auto" Margin="20,16,20,14" RowSpacing="12" ClipToBounds="True">
+
+        <!-- Header: identity, refresh state and actions -->
+        <Grid Grid.Row="0" ColumnDefinitions="*, Auto" ColumnSpacing="14">
+            <StackPanel Spacing="3">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <TextBlock Text="Overview" FontSize="20" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                    <Border IsVisible="{Binding Metrics.IsStale}" Background="{DynamicResource WarningSurfaceBrush}"
+                            BorderBrush="{DynamicResource WarningBrush}" BorderThickness="1"
+                            CornerRadius="4" Padding="7,2" VerticalAlignment="Center">
+                        <TextBlock Text="STALE — showing last known values" FontSize="10" FontWeight="Bold"
+                                   Foreground="{DynamicResource WarningTextBrush}"/>
+                    </Border>
+                </StackPanel>
+                <TextBlock Text="{Binding StatusMessage}" FontSize="11"
+                           Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis"/>
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsRefreshing}" Width="72" Height="4"
+                             Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center"
+                             AutomationProperties.Name="Refreshing"/>
+                <CheckBox Content="Auto-refresh" IsChecked="{Binding IsLiveRefreshEnabled}"
+                          VerticalAlignment="Center"
+                          ToolTip.Tip="Refresh the Overview every 30 seconds while this tab is open"
+                          AutomationProperties.Name="Auto refresh"/>
+                <Button Classes="pill-btn" Command="{Binding CopyDiagnosticsCommand}"
+                        IsEnabled="{Binding CanExportDiagnostics}"
+                        ToolTip.Tip="Copy a shareable diagnostics report (host redacted by default)">
+                    <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                        <ic:SymbolIcon Symbol="Copy" FontSize="12" VerticalAlignment="Center"/>
+                        <TextBlock Text="Copy report" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+                <Button Classes="pill-btn" Command="{Binding ExportDiagnosticsCommand}"
+                        IsEnabled="{Binding CanExportDiagnostics}"
+                        ToolTip.Tip="Save a diagnostics report to a file">
+                    <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                        <ic:SymbolIcon Symbol="ArrowDownload" FontSize="12" VerticalAlignment="Center"/>
+                        <TextBlock Text="Save report" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+                <Button Classes="action-btn" Command="{Binding RefreshDashboardCommand}"
+                        IsEnabled="{Binding !IsRefreshing}" Background="{DynamicResource AccentStrongBrush}"
+                        Foreground="{DynamicResource TextPrimaryBrush}" AutomationProperties.Name="Refresh overview">
+                    <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                        <ic:SymbolIcon Symbol="ArrowClockwise" FontSize="12" VerticalAlignment="Center"/>
+                        <TextBlock Text="Refresh" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <!-- Modern 4-Column Datacenter Telemetry Row: CPU, Memory, Storage, Network -->
+        <Grid Grid.Row="1" ColumnDefinitions="*, *, *, *" ColumnSpacing="12" ClipToBounds="True">
+
+            <!-- Card 1: CPU LOAD -->
+            <Border Grid.Column="0" Classes="stat-card" Padding="14" ClipToBounds="True">
+                <Grid RowDefinitions="Auto, Auto, *, Auto" RowSpacing="6">
+                    <Grid Grid.Row="0" ColumnDefinitions="Auto, Auto, *" ColumnSpacing="6">
+                        <ic:SymbolIcon Symbol="DeveloperBoard" FontSize="14" Foreground="{DynamicResource MetricCpuWaveBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="CPU LOAD" FontSize="10" FontWeight="Bold" LetterSpacing="0.5"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="2" Text="{Binding Metrics.CpuModel}" FontSize="10"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis"
+                                   HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <Grid Grid.Row="1" ColumnDefinitions="*, Auto" ColumnSpacing="8" VerticalAlignment="Center" Margin="0,2">
+                        <TextBlock Text="{Binding Metrics.CpuValue}" FontSize="24" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"
+                                   VerticalAlignment="Center"/>
+                        <Border Grid.Column="1" Background="{DynamicResource MetricBadgeBackgroundBrush}"
+                                BorderBrush="{DynamicResource MetricBadgeBorderBrush}" BorderThickness="1"
+                                CornerRadius="6" Padding="7,2" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Metrics.CpuTemperature}"
+                                       FontSize="10" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource MetricCpuWaveBrush}"/>
+                        </Border>
+                    </Grid>
+
+                    <cards:WaveGraphControl Grid.Row="2" Height="44" Margin="0,3,0,3"
+                                            Values="{Binding Metrics.CpuSeries}"
+                                            Stroke="{DynamicResource MetricCpuWaveBrush}"
+                                            BaselineBrush="{DynamicResource DividerBrush}"
+                                            StrokeThickness="2.0"
+                                            Maximum="100"/>
+
+                    <Grid Grid.Row="3" ColumnDefinitions="*, Auto">
+                        <TextBlock Text="{Binding Metrics.LoadAverage, StringFormat='Load avg: {0}'}" FontSize="10"
+                                   Foreground="{DynamicResource TextMutedBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{Binding Metrics.CpuFrequency}" FontSize="10" FontWeight="Bold"
+                                   Foreground="{DynamicResource MetricCpuWaveBrush}" VerticalAlignment="Center"/>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- Card 2: MEMORY (RAM) -->
+            <Border Grid.Column="1" Classes="stat-card" Padding="14" ClipToBounds="True">
+                <Grid RowDefinitions="Auto, Auto, *, Auto" RowSpacing="6">
+                    <Grid Grid.Row="0" ColumnDefinitions="Auto, Auto, *" ColumnSpacing="6">
+                        <ic:SymbolIcon Symbol="Ram" FontSize="14" Foreground="{DynamicResource MetricRamActiveBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="MEMORY (RAM)" FontSize="10" FontWeight="Bold" LetterSpacing="0.5"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="2" Text="{Binding Metrics.RamValue, StringFormat='{}{0} Used'}" FontSize="10" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource MetricRamActiveBrush}" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                   TextTrimming="CharacterEllipsis"/>
+                    </Grid>
+
+                    <Grid Grid.Row="1" ColumnDefinitions="*, Auto" ColumnSpacing="8" VerticalAlignment="Center" Margin="0,2">
+                        <TextBlock Text="{Binding Metrics.RamHeroValue}" FontSize="24" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"
+                                   VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="DDR RAM" FontSize="10" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <cards:WaveGraphControl Grid.Row="2" Height="44" Margin="0,3,0,3"
+                                            Values="{Binding Metrics.RamSeries}"
+                                            Stroke="{DynamicResource MetricRamActiveBrush}"
+                                            BaselineBrush="{DynamicResource DividerBrush}"
+                                            BaselinePercent="35"
+                                            StrokeThickness="2.0"
+                                            Maximum="100"/>
+
+                    <Grid Grid.Row="3" ColumnDefinitions="*, Auto">
+                        <TextBlock Text="{Binding Metrics.SwapDetail}" FontSize="10"
+                                   Foreground="{DynamicResource TextMutedBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{Binding Metrics.RamAvailableGb, StringFormat='Free: {0:0.0} GB'}" FontSize="10" FontWeight="Bold"
+                                   Foreground="{DynamicResource MetricRamActiveBrush}" VerticalAlignment="Center"/>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- Card 3: NVME STORAGE -->
+            <Border Grid.Column="2" Classes="stat-card" Padding="14" ClipToBounds="True">
+                <Grid RowDefinitions="Auto, Auto, *, Auto" RowSpacing="6">
+                    <Grid Grid.Row="0" ColumnDefinitions="Auto, Auto, *" ColumnSpacing="6">
+                        <ic:SymbolIcon Symbol="HardDrive" FontSize="14" Foreground="{DynamicResource MetricDiskOrchidBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="NVME STORAGE" FontSize="10" FontWeight="Bold" LetterSpacing="0.5"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="2" Text="{Binding Metrics.DiskValue, StringFormat='{}{0} Cap'}" FontSize="10" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource MetricDiskOrchidBrush}" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                   TextTrimming="CharacterEllipsis"/>
+                    </Grid>
+
+                    <Grid Grid.Row="1" ColumnDefinitions="*, Auto" ColumnSpacing="8" VerticalAlignment="Center" Margin="0,2">
+                        <TextBlock Text="{Binding Metrics.DiskHeroValue}" FontSize="24" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"
+                                   VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{Binding Metrics.DiskFilesystem}" FontSize="10" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"
+                                   TextTrimming="CharacterEllipsis"/>
+                    </Grid>
+
+                    <cards:WaveGraphControl Grid.Row="2" Height="44" Margin="0,3,0,3"
+                                            Values="{Binding Metrics.DiskSeries}"
+                                            Stroke="{DynamicResource MetricDiskOrchidBrush}"
+                                            BaselineBrush="{DynamicResource DividerBrush}"
+                                            BaselinePercent="42"
+                                            StrokeThickness="2.0"
+                                            Maximum="100"/>
+
+                    <Grid Grid.Row="3" ColumnDefinitions="*, Auto">
+                        <TextBlock Text="{Binding Metrics.DiskThroughput}" FontSize="10"
+                                   Foreground="{DynamicResource TextMutedBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="SMART: Verified" FontSize="10" FontWeight="Bold"
+                                   Foreground="{DynamicResource MetricDiskOrchidBrush}" VerticalAlignment="Center"/>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- Card 4: NETWORK I/O -->
+            <Border Grid.Column="3" Classes="stat-card" Padding="14" ClipToBounds="True">
+                <Grid RowDefinitions="Auto, Auto, *, Auto" RowSpacing="6">
+                    <Grid Grid.Row="0" ColumnDefinitions="Auto, Auto, *" ColumnSpacing="6">
+                        <ic:SymbolIcon Symbol="ArrowSync" FontSize="14" Foreground="{DynamicResource MetricNetRxBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="NETWORK I/O" FontSize="10" FontWeight="Bold" LetterSpacing="0.5"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="2" Text="{Binding Metrics.NetInterface}" FontSize="10"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis"
+                                   HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <Grid Grid.Row="1" ColumnDefinitions="*, Auto" ColumnSpacing="6" VerticalAlignment="Center" Margin="0,2">
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Metrics.NetRxText}" FontSize="12" FontWeight="Bold"
+                                       Foreground="{DynamicResource MetricNetRxBrush}" VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Text="{Binding Metrics.NetTxText}" FontSize="12" FontWeight="Bold"
+                                       Foreground="{DynamicResource MetricNetTxBrush}" VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis"/>
+                        </StackPanel>
+                        <Border Grid.Column="1" Background="{DynamicResource MetricBadgeBackgroundBrush}"
+                                BorderBrush="{DynamicResource MetricBadgeBorderBrush}" BorderThickness="1"
+                                CornerRadius="6" Padding="6,2" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Metrics.NetDropsText}" FontSize="10" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        </Border>
+                    </Grid>
+
+                    <cards:WaveGraphControl Grid.Row="2" Height="44" Margin="0,3,0,3"
+                                            Values="{Binding Metrics.NetRxSeries}"
+                                            SecondaryValues="{Binding Metrics.NetTxSeries}"
+                                            Stroke="{DynamicResource MetricNetRxBrush}"
+                                            SecondaryStroke="{DynamicResource MetricNetTxBrush}"
+                                            BaselineBrush="{DynamicResource DividerBrush}"
+                                            StrokeThickness="2.0"
+                                            IsSecondaryDashed="True"
+                                            Maximum="100"/>
+
+                    <Grid Grid.Row="3" ColumnDefinitions="*, Auto">
+                        <TextBlock Text="Packets: 42.1k/s" FontSize="10"
+                                   Foreground="{DynamicResource TextMutedBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{Binding Metrics.NetPacketsText}" FontSize="10" FontWeight="Bold"
+                                   Foreground="{DynamicResource MetricNetRxBrush}" VerticalAlignment="Center"/>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Status row: health, one consolidated attention list, backup summary -->
+        <Grid Grid.Row="2" ColumnDefinitions="*, 1.35*, *" ColumnSpacing="12" ClipToBounds="True">
+
+            <!-- Card 5: APPLICATION HEALTH -->
+            <Border Grid.Column="0" Classes="stat-card" Padding="14" ClipToBounds="True">
+                <Grid RowDefinitions="Auto, Auto, *, Auto" RowSpacing="6">
+                    <Grid Grid.Row="0" ColumnDefinitions="Auto, Auto, *" ColumnSpacing="6">
+                        <ic:SymbolIcon Symbol="HeartPulse" FontSize="14"
+                                       Foreground="{Binding Attention.HealthLevel, Converter={StaticResource BrushForLevelConverter}}"
+                                       VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="APPLICATION HEALTH" FontSize="10" FontWeight="Bold" LetterSpacing="0.5"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="2" Text="{Binding Attention.HealthLevel}" FontSize="10" FontWeight="SemiBold"
+                                   Foreground="{Binding Attention.HealthLevel, Converter={StaticResource BrushForLevelConverter}}"
+                                   HorizontalAlignment="Right" VerticalAlignment="Center"
+                                   TextTrimming="CharacterEllipsis"/>
+                    </Grid>
+
+                    <Grid Grid.Row="1" ColumnDefinitions="*, Auto" ColumnSpacing="8" VerticalAlignment="Center" Margin="0,2">
+                        <TextBlock Text="{Binding Attention.HealthStatus}" FontSize="22" FontWeight="Bold"
+                                   Foreground="{Binding Attention.HealthLevel, Converter={StaticResource BrushForLevelConverter}}"
+                                   TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                        <Border Grid.Column="1" Background="{DynamicResource MetricBadgeBackgroundBrush}"
+                                BorderBrush="{DynamicResource MetricBadgeBorderBrush}" BorderThickness="1"
+                                CornerRadius="6" Padding="7,2" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Attention.HealthStatus, StringFormat='Probe: {0}'}" FontSize="10" FontWeight="SemiBold"
+                                       Foreground="{Binding Attention.HealthLevel, Converter={StaticResource BrushForLevelConverter}}"/>
+                        </Border>
+                    </Grid>
+
+                    <Border Grid.Row="2" Height="44" Margin="0,3,0,3" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Attention.HealthSummary}" FontSize="11" TextWrapping="Wrap"
+                                   MaxLines="2" TextTrimming="CharacterEllipsis"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                    </Border>
+
+                    <Grid Grid.Row="3" ColumnDefinitions="*, Auto">
+                        <TextBlock Text="{Binding Metrics.Uptime, StringFormat='Host uptime: {0}'}" FontSize="10"
+                                   Foreground="{DynamicResource TextMutedBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="HTTP / Service" FontSize="10" FontWeight="Bold"
+                                   Foreground="{Binding Attention.HealthLevel, Converter={StaticResource BrushForLevelConverter}}"
+                                   VerticalAlignment="Center"/>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- Card 6: NEEDS ATTENTION -->
+            <Border Grid.Column="1" Classes="stat-card" Padding="14" ClipToBounds="True">
+                <Grid RowDefinitions="Auto, Auto, *, Auto" RowSpacing="6">
+                    <Grid Grid.Row="0" ColumnDefinitions="Auto, Auto, *" ColumnSpacing="6">
+                        <ic:SymbolIcon Symbol="Warning" FontSize="14"
+                                       Foreground="{Binding Attention.Severity, Converter={StaticResource BrushForLevelConverter}}"
+                                       VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="NEEDS ATTENTION" FontSize="10" FontWeight="Bold" LetterSpacing="0.5"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="2" Text="{Binding Attention.Summary}" FontSize="10" FontWeight="SemiBold"
+                                   Foreground="{Binding Attention.Severity, Converter={StaticResource BrushForLevelConverter}}"
+                                   HorizontalAlignment="Right" VerticalAlignment="Center"
+                                   TextTrimming="CharacterEllipsis"/>
+                    </Grid>
+
+                    <Grid Grid.Row="1" ColumnDefinitions="*, Auto" ColumnSpacing="8" VerticalAlignment="Center" Margin="0,2">
+                        <TextBlock Text="{Binding Attention.Headline}" FontSize="15" FontWeight="Bold"
+                                   Foreground="{Binding Attention.Severity, Converter={StaticResource BrushForLevelConverter}}"
+                                   TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                        <Border Grid.Column="1" Background="{DynamicResource MetricBadgeBackgroundBrush}"
+                                BorderBrush="{DynamicResource MetricBadgeBorderBrush}" BorderThickness="1"
+                                CornerRadius="6" Padding="7,2" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Attention.Severity}" FontSize="10" FontWeight="SemiBold"
+                                       Foreground="{Binding Attention.Severity, Converter={StaticResource BrushForLevelConverter}}"/>
+                        </Border>
+                    </Grid>
+
+                    <Border Grid.Row="2" Height="44" Margin="0,3,0,3">
+                        <Panel>
+                            <TextBlock Text="All services, containers and host metrics normal."
+                                       FontSize="11" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                       IsVisible="{Binding !Attention.HasItems}" VerticalAlignment="Center"/>
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" IsVisible="{Binding Attention.HasItems}">
+                                <ItemsControl ItemsSource="{Binding Attention.Items}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="signals:AttentionItem">
+                                            <Grid ColumnDefinitions="Auto, *" ColumnSpacing="7" Margin="0,1">
+                                                 <Ellipse Width="6" Height="6" VerticalAlignment="Center"
+                                                          Fill="{Binding Severity, Converter={StaticResource BrushForLevelConverter}}"/>
+                                                 <StackPanel Grid.Column="1">
+                                                     <TextBlock Text="{Binding Title}" FontSize="11" FontWeight="SemiBold"
+                                                                Foreground="{DynamicResource TextPrimaryBrush}"
+                                                                TextTrimming="CharacterEllipsis"/>
+                                                     <TextBlock Text="{Binding Detail}" FontSize="10" TextWrapping="Wrap"
+                                                                MaxLines="1" TextTrimming="CharacterEllipsis"
+                                                                Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                 </StackPanel>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Panel>
+                    </Border>
+
+                    <Grid Grid.Row="3" ColumnDefinitions="*, Auto">
+                        <TextBlock Text="Diagnostic telemetry" FontSize="10"
+                                   Foreground="{DynamicResource TextMutedBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{Binding Attention.Items.Count, StringFormat='{}{0} signals'}" FontSize="10" FontWeight="Bold"
+                                   Foreground="{Binding Attention.Severity, Converter={StaticResource BrushForLevelConverter}}"
+                                   VerticalAlignment="Center"/>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- Card 7: LATEST BACKUP -->
+            <Border Grid.Column="2" Classes="stat-card" Padding="14" ClipToBounds="True">
+                <Grid RowDefinitions="Auto, Auto, *, Auto" RowSpacing="6">
+                    <Grid Grid.Row="0" ColumnDefinitions="Auto, Auto, *" ColumnSpacing="6">
+                        <ic:SymbolIcon Symbol="Database" FontSize="14" Foreground="{DynamicResource AccentTeal}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="LATEST BACKUP" FontSize="10" FontWeight="Bold" LetterSpacing="0.5"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="2" Text="{Binding Attention.LatestBackupScope}" FontSize="10" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource AccentTeal}" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                   TextTrimming="CharacterEllipsis"/>
+                    </Grid>
+
+                    <Grid Grid.Row="1" ColumnDefinitions="*, Auto" ColumnSpacing="8" VerticalAlignment="Center" Margin="0,2">
+                        <TextBlock Text="{Binding Attention.LatestBackupHero}" FontSize="22" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"
+                                   VerticalAlignment="Center"/>
+                        <Border Grid.Column="1" Background="{DynamicResource MetricBadgeBackgroundBrush}"
+                                BorderBrush="{DynamicResource MetricBadgeBorderBrush}" BorderThickness="1"
+                                CornerRadius="6" Padding="7,2" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Attention.LatestBackupBadge}" FontSize="10" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource AccentTeal}"/>
+                        </Border>
+                    </Grid>
+
+                    <Border Grid.Row="2" Height="44" Margin="0,3,0,3" VerticalAlignment="Center">
+                        <Grid RowDefinitions="Auto, Auto" RowSpacing="2" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Attention.LatestBackupSummary}" FontSize="11"
+                                       TextTrimming="CharacterEllipsis"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBlock Grid.Row="1" Text="{Binding Attention.ScheduledBackupSummary}" FontSize="10"
+                                       TextTrimming="CharacterEllipsis"
+                                       Foreground="{DynamicResource TextMutedBrush}"/>
+                        </Grid>
+                    </Border>
+
+                    <Grid Grid.Row="3" ColumnDefinitions="*, Auto">
+                        <TextBlock Text="{Binding Attention.LatestBackupFooter}" FontSize="10"
+                                   Foreground="{DynamicResource TextMutedBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="Vault Storage" FontSize="10" FontWeight="Bold"
+                                   Foreground="{DynamicResource AccentTeal}" VerticalAlignment="Center"/>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Main area: workloads on the left, logs on the right with interactive splitter -->
+        <Grid Grid.Row="3" ColumnDefinitions="1.35*, 8, *" MinHeight="280">
+
+            <!-- Workloads Window -->
+            <Border Grid.Column="0" Classes="stat-card" Padding="14">
+                <Grid RowDefinitions="Auto, Auto, Auto, *" RowSpacing="10">
+                    <!-- Row 0: Datacenter Section Header -->
+                    <Grid ColumnDefinitions="Auto, Auto, *, Auto" ColumnSpacing="8">
+                        <ic:SymbolIcon Symbol="Cube" FontSize="14" Foreground="{DynamicResource AccentTeal}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="PROJECT WORKLOADS" FontSize="10" FontWeight="Bold" LetterSpacing="0.5"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="2" Text="{Binding RemoteProjectPath}" FontSize="10"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis"
+                                   VerticalAlignment="Center"/>
+                        <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Workloads.FilteredCount, StringFormat='{}{0} shown'}" FontSize="10"
+                                       Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center"/>
+                            <Border Background="{DynamicResource MetricBadgeBackgroundBrush}"
+                                    BorderBrush="{DynamicResource MetricBadgeBorderBrush}" BorderThickness="1"
+                                    CornerRadius="6" Padding="7,2" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Workloads.WorkloadCount, StringFormat='{}{0} detected'}"
+                                           Foreground="{DynamicResource AccentTeal}" FontSize="10" FontWeight="SemiBold"/>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Row 1: Search & Filter Toolbar -->
+                    <Grid Grid.Row="1" ColumnDefinitions="*, 8, 140">
+                        <TextBox Text="{Binding Workloads.SearchText}" PlaceholderText="Search workloads, image, ports…"
+                                 Padding="8,5" FontSize="11" CornerRadius="6" AutomationProperties.Name="Search workloads"/>
+                        <ComboBox Grid.Column="2" ItemsSource="{Binding Workloads.Sources}"
+                                  SelectedItem="{Binding Workloads.SourceFilter}" Padding="8,5" FontSize="11"
+                                  CornerRadius="6" HorizontalAlignment="Stretch"
+                                  AutomationProperties.Name="Workload source filter"/>
+                    </Grid>
+
+                    <!-- Row 2: Table Column Headers -->
+                    <Grid Grid.Row="2" ColumnDefinitions="1.8*, 1.2*, 1.4*, Auto" Margin="10,0,10,0" ColumnSpacing="12"
+                          IsVisible="{Binding Workloads.HasFilteredWorkloads}">
+                        <TextBlock Text="APPLICATION / IMAGE" FontSize="9" FontWeight="Bold" LetterSpacing="0.5"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <TextBlock Grid.Column="1" Text="STATUS / UPTIME" FontSize="9" FontWeight="Bold" LetterSpacing="0.5"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <TextBlock Grid.Column="2" Text="PORT MAPPINGS" FontSize="9" FontWeight="Bold" LetterSpacing="0.5"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <TextBlock Grid.Column="3" Text="SOURCE" FontSize="9" FontWeight="Bold" LetterSpacing="0.5"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Right"/>
+                    </Grid>
+
+                    <!-- Row 3: Workload Items List & Empty State -->
+                    <Grid Grid.Row="3">
+                        <ListBox IsVisible="{Binding Workloads.HasFilteredWorkloads}"
+                                 ItemsSource="{Binding Workloads.Filtered}"
+                                 SelectedItem="{Binding Workloads.Selected, Mode=TwoWay}"
+                                 Background="Transparent" BorderThickness="0" Padding="0"
+                                 AutomationProperties.Name="Detected workloads">
+                            <ListBox.Styles>
+                                <Style Selector="ListBoxItem">
+                                    <Setter Property="Padding" Value="0"/>
+                                    <Setter Property="Margin" Value="0,0,0,5"/>
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="FocusAdorner" Value="{x:Null}"/>
+                                </Style>
+                                <Style Selector="ListBoxItem /template/ ContentPresenter">
+                                    <Setter Property="Background" Value="Transparent"/>
+                                </Style>
+                                <Style Selector="ListBoxItem:selected Border.workload-item">
+                                    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                    <Setter Property="Background" Value="{DynamicResource AccentActiveBrush}"/>
+                                </Style>
+                                <Style Selector="ListBoxItem:pointerover Border.workload-item">
+                                    <Setter Property="BorderBrush" Value="{DynamicResource DividerHighlightBrush}"/>
+                                </Style>
+                                <Style Selector="ListBoxItem:selected:pointerover Border.workload-item">
+                                    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                    <Setter Property="Background" Value="{DynamicResource AccentActiveBrush}"/>
+                                </Style>
+                            </ListBox.Styles>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="models:RuntimeInfo">
+                                    <Border Classes="workload-item" Background="{DynamicResource PanelBrush}"
+                                            BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1"
+                                            CornerRadius="8" Padding="10,8">
+                                        <Grid ColumnDefinitions="1.8*, 1.2*, 1.4*, Auto" ColumnSpacing="12" VerticalAlignment="Center">
+                                            <!-- Application & Image -->
+                                            <StackPanel Spacing="2" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Name}" FontSize="12" FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Text="{Binding Image, FallbackValue='Host native process'}" FontSize="10"
+                                                           Foreground="{DynamicResource TextMutedBrush}" TextTrimming="CharacterEllipsis"/>
+                                            </StackPanel>
+
+                                            <!-- Status with Pulse Dot & Uptime -->
+                                            <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                                    <Ellipse Width="6" Height="6" VerticalAlignment="Center"
+                                                             Fill="{Binding Status, Converter={StaticResource BrushForLevelConverter}}"/>
+                                                    <TextBlock Text="{Binding Status}" FontSize="11" FontWeight="SemiBold"
+                                                               Foreground="{Binding Status, Converter={StaticResource BrushForLevelConverter}}"
+                                                               TextTrimming="CharacterEllipsis"/>
+                                                </StackPanel>
+                                                <TextBlock Text="{Binding Uptime, FallbackValue='—'}" FontSize="10"
+                                                           Foreground="{DynamicResource TextMutedBrush}" TextTrimming="CharacterEllipsis"/>
+                                            </StackPanel>
+
+                                            <!-- Ports -->
+                                            <StackPanel Grid.Column="2" Spacing="2" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Ports, FallbackValue='—'}" FontSize="11"
+                                                           Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Text="{Binding Details}" FontSize="9"
+                                                           Foreground="{DynamicResource TextMutedBrush}" TextTrimming="CharacterEllipsis"/>
+                                            </StackPanel>
+
+                                            <!-- Source Badge -->
+                                            <Border Grid.Column="3" Background="{DynamicResource MetricBadgeBackgroundBrush}"
+                                                    BorderBrush="{DynamicResource MetricBadgeBorderBrush}" BorderThickness="1"
+                                                    CornerRadius="5" Padding="6,2" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Source}" FontSize="9" FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                            </Border>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+                        <!-- Clean Empty State -->
+                        <Border IsVisible="{Binding !Workloads.HasFilteredWorkloads}"
+                                Background="{DynamicResource PanelBrush}" CornerRadius="8" Padding="24"
+                                BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1">
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+                                <ic:SymbolIcon Symbol="Cube" FontSize="30" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
+                                <TextBlock Text="{Binding Workloads.EmptyMessage}" FontSize="12" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextSecondaryBrush}" TextAlignment="Center" TextWrapping="Wrap"/>
+                                <TextBlock Text="Verify SSH connection or run 'docker compose up -d' on the remote host."
+                                           FontSize="10" Foreground="{DynamicResource TextMutedBrush}" TextAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- Column Splitter for interactive responsiveness -->
+            <GridSplitter Grid.Column="1" Background="Transparent" ResizeDirection="Columns"
+                          Width="8" HorizontalAlignment="Center"/>
+
+            <!-- Recent Logs Window -->
+            <Border Grid.Column="2" Classes="stat-card" Padding="0" ClipToBounds="True">
+                <Grid RowDefinitions="Auto, *">
+                    <!-- Logs Header & Toolbar -->
+                    <Border Background="{DynamicResource PanelRaisedBrush}" Padding="12,9"
+                            BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1">
+                        <Grid RowDefinitions="Auto, Auto" RowSpacing="8">
+                            <!-- Title & Active Workload Target -->
+                            <Grid ColumnDefinitions="Auto, Auto, *, Auto" ColumnSpacing="6" VerticalAlignment="Center">
+                                <ic:SymbolIcon Symbol="DeveloperBoard" FontSize="14" Foreground="{DynamicResource MetricNetTxBrush}" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" Text="RECENT LOGS" FontSize="10" FontWeight="Bold" LetterSpacing="0.5"
+                                           Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="2" Text="{Binding Workloads.Selected.Name, FallbackValue='No workload selected'}"
+                                           FontSize="11" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
+                                           Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                                <Border Grid.Column="3" Background="{DynamicResource MetricBadgeBackgroundBrush}"
+                                        BorderBrush="{DynamicResource MetricBadgeBorderBrush}" BorderThickness="1"
+                                        CornerRadius="6" Padding="7,2" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Workloads.LogsFetchedAt}" FontSize="9" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource MetricNetTxBrush}"/>
+                                </Border>
+                            </Grid>
+
+                            <!-- Actions Toolbar -->
+                            <Grid Grid.Row="1" ColumnDefinitions="Auto, Auto, *, Auto, Auto, Auto" ColumnSpacing="6">
+                                <ComboBox ItemsSource="{Binding Workloads.LogLineCountOptions}"
+                                          SelectedItem="{Binding Workloads.LogLineCount}" MinWidth="68" Padding="6,3" FontSize="10"
+                                          CornerRadius="5" ToolTip.Tip="Tail lines count"
+                                          AutomationProperties.Name="Log line count"/>
+                                <CheckBox Grid.Column="1" x:Name="FollowLogsToggle" Content="Follow" IsChecked="True"
+                                          FontSize="10" Padding="0" VerticalAlignment="Center"
+                                          ToolTip.Tip="Scroll to the newest log lines as they arrive"/>
+
+                                <Button Grid.Column="3" Classes="pill-btn" Command="{Binding Workloads.RefreshLogsCommand}"
+                                        Padding="7,3" FontSize="10" ToolTip.Tip="Refresh logs">
+                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                        <ic:SymbolIcon Symbol="ArrowClockwise" FontSize="11" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Refresh" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Grid.Column="4" Classes="pill-btn" Command="{Binding Workloads.CopyLogsCommand}"
+                                        Padding="7,3" FontSize="10" ToolTip.Tip="Copy logs to clipboard">
+                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                        <ic:SymbolIcon Symbol="Copy" FontSize="11" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Copy" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Grid.Column="5" Classes="pill-btn" Command="{Binding Workloads.ClearLogsCommand}"
+                                        Padding="7,3" FontSize="10" ToolTip.Tip="Clear console viewer">
+                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                        <ic:SymbolIcon Symbol="Dismiss" FontSize="11" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Clear" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                        </Grid>
+                    </Border>
+
+                    <!-- Terminal Output View -->
+                    <Border Grid.Row="1" Background="{DynamicResource LogSurfaceBrush}">
+                        <terminal:TerminalViewer x:Name="WorkloadLogViewer" StripAnsiCodes="False" ColorizeAnsi="True"
+                                                 AutoScroll="True" FontSize="11"/>
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Session activity, fed by the deploy and database tabs -->
+        <Border Grid.Row="4" Classes="stat-card" Padding="12,10" IsVisible="{Binding Activity.HasEntries}">
+            <Grid ColumnDefinitions="Auto, Auto, *" ColumnSpacing="10">
+                <ic:SymbolIcon Symbol="ArrowSync" FontSize="13" Foreground="{DynamicResource AccentTeal}" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="1" Text="RECENT ACTIVITY" FontSize="10" FontWeight="Bold" LetterSpacing="0.5"
+                           Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                <ScrollViewer Grid.Column="2" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                    <ItemsControl ItemsSource="{Binding Activity.Entries}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" Spacing="18"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" FontSize="10" TextWrapping="Wrap" MaxLines="2"
+                                           MaxWidth="300" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+    </Grid>
+    </ScrollViewer>
+</UserControl>

@@ -1,0 +1,529 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:VpsManager.Client.ViewModels"
+             xmlns:model="using:VpsManager.Core.Models"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="850"
+             x:Class="VpsManager.Client.Views.PatchView"
+             x:DataType="vm:PatchViewModel"
+             Background="{DynamicResource AppSurfaceBrush}">
+
+    <UserControl.Styles>
+        <!-- Scan mode selector pills -->
+        <Style Selector="RadioButton.scan-pill">
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="RadioButton.scan-pill:checked">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+
+        <!-- TreeViewItem filter collapse style -->
+        <Style Selector="TreeViewItem" x:DataType="model:FilePatchNode">
+            <Setter Property="IsVisible" Value="{Binding IsVisibleInFilter}"/>
+        </Style>
+
+        <!-- Dynamic change status badges -->
+        <Style Selector="Border.status-badge">
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="6,1"/>
+            <Setter Property="Margin" Value="4,0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+        <Style Selector="Border.status-badge.modified">
+            <Setter Property="Background" Value="{DynamicResource PatchModifiedSurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource PatchModifiedBorderBrush}"/>
+        </Style>
+        <Style Selector="Border.status-badge.modified TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource PatchModifiedBrush}"/>
+        </Style>
+        <Style Selector="Border.status-badge.new">
+            <Setter Property="Background" Value="{DynamicResource PatchNewSurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource PatchNewBorderBrush}"/>
+        </Style>
+        <Style Selector="Border.status-badge.new TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource PatchNewBrush}"/>
+        </Style>
+        <Style Selector="Border.status-badge.deleted">
+            <Setter Property="Background" Value="{DynamicResource PatchDeletedSurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource PatchDeletedBorderBrush}"/>
+        </Style>
+        <Style Selector="Border.status-badge.deleted TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource PatchDeletedBrush}"/>
+        </Style>
+        <Style Selector="Border.status-badge.unchanged">
+            <Setter Property="Background" Value="{DynamicResource MetricBadgeBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource MetricBadgeBorderBrush}"/>
+        </Style>
+        <Style Selector="Border.status-badge.unchanged TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="Auto, Auto, *, Auto" Margin="20,16,20,14" RowSpacing="12" ClipToBounds="True">
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             ROW 0: Top Header & Pipeline Control Strip
+             ═══════════════════════════════════════════════════════════════════ -->
+        <Grid Grid.Row="0" ColumnDefinitions="*, Auto" ColumnSpacing="14">
+            <StackPanel Spacing="3">
+                <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                    <TextBlock Text="Hot-Swap Patch Workstation" FontSize="20" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                    <Border Background="{DynamicResource PanelRaisedBrush}" BorderBrush="{DynamicResource DividerBrush}"
+                            BorderThickness="1" CornerRadius="6" Padding="8,3" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <TextBlock Text="Target:" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBlock Text="{Binding ProfileName}" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource AccentTeal}"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Subtitle & Scan mode pills -->
+                <Grid ColumnDefinitions="*, Auto" Margin="0,2,0,0">
+                    <TextBlock Text="{Binding StatusMessage}" FontSize="11"
+                               Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+
+                    <!-- Scan Mode Pill Switcher -->
+                    <Border Grid.Column="1" Background="{DynamicResource PanelRaisedBrush}" CornerRadius="6" Padding="3"
+                            BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1">
+                        <StackPanel Orientation="Horizontal" Spacing="2">
+                            <RadioButton Classes="scan-pill"
+                                         Content="Git Changes (Fast)"
+                                         IsChecked="{Binding IsGitScanMode}"
+                                         GroupName="PatchScanMode"
+                                         ToolTip.Tip="Scan only uncommitted Git working tree modifications"/>
+                            <RadioButton Classes="scan-pill"
+                                         Content="All Workspace Files"
+                                         IsChecked="{Binding !IsGitScanMode}"
+                                         GroupName="PatchScanMode"
+                                         ToolTip.Tip="Scan entire project hierarchy honoring .syncignore"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </StackPanel>
+
+            <!-- Top Action Buttons -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <!-- Busy indicator -->
+                <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}" Width="60" Height="4"
+                             Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
+
+                <!-- Cancel Button -->
+                <Button Classes="pill-btn danger" Command="{Binding CancelOperationCommand}"
+                        IsVisible="{Binding IsBusy}" ToolTip.Tip="Cancel active operation">
+                    <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                        <ic:SymbolIcon Symbol="Dismiss" FontSize="12" VerticalAlignment="Center"/>
+                        <TextBlock Text="Cancel" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Rollback Button (Visible when snapshot exists) -->
+                <Button Classes="pill-btn danger" Command="{Binding RollbackLastPatchCommand}"
+                        IsVisible="{Binding HasBackupToRollback}" ToolTip.Tip="Rollback target directory to pre-patch snapshot">
+                    <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                        <ic:SymbolIcon Symbol="ArrowCounterclockwise" FontSize="12" VerticalAlignment="Center"/>
+                        <TextBlock Text="Rollback" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Scan Button -->
+                <Button Classes="pill-btn" Command="{Binding ScanChangesCommand}"
+                        IsEnabled="{Binding !IsBusy}" ToolTip.Tip="Rescan workspace for file changes">
+                    <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                        <ic:SymbolIcon Symbol="ArrowSync" FontSize="12" VerticalAlignment="Center"/>
+                        <TextBlock Text="Scan" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Primary Deploy Button -->
+                <Button Classes="action-btn" Command="{Binding DeployPatchCommand}"
+                        IsEnabled="{Binding !IsBusy}" Background="{DynamicResource AccentStrongBrush}"
+                        Foreground="{DynamicResource TextWhiteBrush}" ToolTip.Tip="Package and deploy selected files to remote VPS">
+                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                        <ic:SymbolIcon Symbol="Flash" FontSize="13" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding SelectedFileCount, StringFormat='Deploy ({0})'}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             ROW 1: 3-Column Telemetry & Architecture Cards
+             ═══════════════════════════════════════════════════════════════════ -->
+        <Grid Grid.Row="1" ColumnDefinitions="*, *, *" ColumnSpacing="12" ClipToBounds="True">
+
+            <!-- Card 1: Git Repository & Working Tree -->
+            <Border Grid.Column="0" Classes="stat-card" Padding="14" ClipToBounds="True">
+                <Grid RowDefinitions="Auto, Auto, *, Auto" RowSpacing="6">
+                    <Grid Grid.Row="0" ColumnDefinitions="Auto, Auto, *" ColumnSpacing="6">
+                        <ic:SymbolIcon Symbol="Branch" FontSize="14" Foreground="{DynamicResource AccentTeal}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="GIT WORKING TREE" FontSize="10" FontWeight="Bold" LetterSpacing="0.5"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                        <Border Grid.Column="2" Background="{DynamicResource MetricBadgeBackgroundBrush}"
+                                BorderBrush="{DynamicResource MetricBadgeBorderBrush}" BorderThickness="1"
+                                CornerRadius="4" Padding="6,1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding GitBranchName, StringFormat='Branch: {0}'}" FontSize="10"
+                                       Foreground="{DynamicResource AccentTeal}" FontWeight="SemiBold"/>
+                        </Border>
+                    </Grid>
+
+                    <Grid Grid.Row="1" ColumnDefinitions="*, Auto" ColumnSpacing="8" VerticalAlignment="Center" Margin="0,2">
+                        <TextBlock Text="Uncommitted Changes" IsVisible="{Binding HasGitChanges}" FontSize="16" FontWeight="Bold"
+                                   Foreground="{DynamicResource WarningBrush}" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Text="Working Tree Clean" IsVisible="{Binding !HasGitChanges}" FontSize="16" FontWeight="Bold"
+                                   Foreground="{DynamicResource SuccessBrush}" TextTrimming="CharacterEllipsis"/>
+                        <Border Grid.Column="1" Background="{DynamicResource MetricBadgeBackgroundBrush}"
+                                BorderBrush="{DynamicResource MetricBadgeBorderBrush}" BorderThickness="1"
+                                CornerRadius="6" Padding="6,2" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding SelectedFileCount, StringFormat='{}{0} Queued'}"
+                                       FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource AccentTeal}"/>
+                        </Border>
+                    </Grid>
+
+                    <!-- Change Breakdown & Summary -->
+                    <Border Grid.Row="2" Background="{DynamicResource PanelBrush}" CornerRadius="6" Padding="8,5" Margin="0,2">
+                        <StackPanel Spacing="4">
+                            <WrapPanel Orientation="Horizontal">
+                                <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,0,8,0">
+                                    <Ellipse Width="7" Height="7" Fill="{DynamicResource PatchModifiedBrush}" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding ModifiedCount, StringFormat='{}{0} modified'}" FontSize="10" Foreground="{DynamicResource PatchModifiedBrush}"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,0,8,0">
+                                    <Ellipse Width="7" Height="7" Fill="{DynamicResource PatchNewBrush}" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding NewCount, StringFormat='{}{0} new'}" FontSize="10" Foreground="{DynamicResource PatchNewBrush}"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <Ellipse Width="7" Height="7" Fill="{DynamicResource PatchDeletedBrush}" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding DeletedCount, StringFormat='{}{0} deleted'}" FontSize="10" Foreground="{DynamicResource PatchDeletedBrush}"/>
+                                </StackPanel>
+                            </WrapPanel>
+                            <TextBlock Text="{Binding GitStatusSummary}" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}"
+                                       TextTrimming="CharacterEllipsis"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Grid Grid.Row="3" ColumnDefinitions="*, Auto">
+                        <TextBlock Text="Incremental Diff Scan" FontSize="10"
+                                   Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="Fast Track" FontSize="10" FontWeight="Bold"
+                                   Foreground="{DynamicResource AccentTeal}" VerticalAlignment="Center"/>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- Card 2: Deployment Target -->
+            <Border Grid.Column="1" Classes="stat-card" Padding="14" ClipToBounds="True">
+                <Grid RowDefinitions="Auto, Auto, *, Auto" RowSpacing="6">
+                    <Grid Grid.Row="0" ColumnDefinitions="Auto, Auto, *" ColumnSpacing="6">
+                        <ic:SymbolIcon Symbol="Folder" FontSize="14" Foreground="{DynamicResource MetricCpuWaveBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="DEPLOYMENT TARGET" FontSize="10" FontWeight="Bold" LetterSpacing="0.5"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="2" Text="{Binding IsDockerized, Converter={x:Null}, FallbackValue='Stack Synced'}" FontSize="10"
+                                   Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <Grid Grid.Row="1" ColumnDefinitions="*, Auto" ColumnSpacing="8" VerticalAlignment="Center" Margin="0,2">
+                        <TextBlock Text="{Binding RemoteProjectPath}" FontSize="13" FontWeight="Bold"
+                                   FontFamily="Cascadia Mono, Consolas, Monospace"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+                        <Border Grid.Column="1" Background="{DynamicResource MetricBadgeBackgroundBrush}"
+                                BorderBrush="{DynamicResource MetricBadgeBorderBrush}" BorderThickness="1"
+                                CornerRadius="6" Padding="6,2" VerticalAlignment="Center">
+                            <TextBlock Text="Target VPS" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource MetricCpuWaveBrush}"/>
+                        </Border>
+                    </Grid>
+
+                    <Border Grid.Row="2" Background="{DynamicResource PanelBrush}" CornerRadius="6" Padding="8,5" Margin="0,2">
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="{Binding LocalRootPath, StringFormat='Workspace: {0}'}" FontSize="10"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Text="{Binding SyncIgnoreStatusText}" FontSize="10"
+                                       Foreground="{DynamicResource AccentTeal}" TextTrimming="CharacterEllipsis"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Grid Grid.Row="3" ColumnDefinitions="*, Auto">
+                        <TextBlock Text="POSIX .tar.gz (tar -xzf)" FontSize="10"
+                                   Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="Encrypted SSH" FontSize="10" FontWeight="Bold"
+                                   Foreground="{DynamicResource MetricCpuWaveBrush}" VerticalAlignment="Center"/>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- Card 3: Payload & Safety Gates -->
+            <Border Grid.Column="2" Classes="stat-card" Padding="14" ClipToBounds="True">
+                <Grid RowDefinitions="Auto, Auto, *, Auto" RowSpacing="6">
+                    <Grid Grid.Row="0" ColumnDefinitions="Auto, Auto, *" ColumnSpacing="6">
+                        <ic:SymbolIcon Symbol="ShieldCheckmark" FontSize="14" Foreground="{DynamicResource MetricDiskOrchidBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="PAYLOAD &amp; SAFETY GATES" FontSize="10" FontWeight="Bold" LetterSpacing="0.5"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                        <Border Grid.Column="2" Background="{DynamicResource MetricBadgeBackgroundBrush}"
+                                BorderBrush="{DynamicResource MetricBadgeBorderBrush}" BorderThickness="1"
+                                CornerRadius="4" Padding="6,1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding FormattedPayloadSize}" FontSize="10" FontWeight="Bold"
+                                       Foreground="{DynamicResource AccentTeal}"/>
+                        </Border>
+                    </Grid>
+
+                    <Grid Grid.Row="1" ColumnDefinitions="*, Auto" ColumnSpacing="8" VerticalAlignment="Center" Margin="0,2">
+                        <TextBlock Text="{Binding SelectedFileCount, StringFormat='{}{0} Files Selected'}" FontSize="16" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+                        <Border Grid.Column="1" Background="{DynamicResource MetricBadgeBackgroundBrush}"
+                                BorderBrush="{DynamicResource MetricBadgeBorderBrush}" BorderThickness="1"
+                                CornerRadius="6" Padding="6,2" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding HasBackupToRollback, Converter={x:Null}, FallbackValue='Snapshot Armed'}" FontSize="10" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource MetricDiskOrchidBrush}"/>
+                        </Border>
+                    </Grid>
+
+                    <Border Grid.Row="2" Background="{DynamicResource PanelBrush}" CornerRadius="6" Padding="8,3" Margin="0,2">
+                        <StackPanel Spacing="1">
+                            <CheckBox Content="Remote Backup Snapshot before apply" IsChecked="{Binding CreateBackupSnapshot}"
+                                      FontSize="10" Padding="6,0" Margin="0" VerticalAlignment="Center"/>
+                            <CheckBox Content="Auto-Reload Service after deploy" IsChecked="{Binding AutoReloadService}"
+                                      FontSize="10" Padding="6,0" Margin="0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Grid Grid.Row="3" ColumnDefinitions="*, Auto">
+                        <TextBlock Text="Atomic rollbacks enabled" FontSize="10"
+                                   Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="Zero-Downtime" FontSize="10" FontWeight="Bold"
+                                   Foreground="{DynamicResource MetricDiskOrchidBrush}" VerticalAlignment="Center"/>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             ROW 2: Dual-Pane Workspace (Tree Left, Console Right)
+             ═══════════════════════════════════════════════════════════════════ -->
+        <Grid Grid.Row="2" ColumnDefinitions="1.15*, *" ColumnSpacing="12" ClipToBounds="True">
+
+            <!-- LEFT PANE: Workspace File Selection Tree -->
+            <Border Grid.Column="0" Classes="stat-card" Padding="0" ClipToBounds="True">
+                <Grid RowDefinitions="Auto, Auto, *">
+                    <!-- Pane Header -->
+                    <Border Grid.Row="0" Background="{DynamicResource PanelRaisedBrush}" Padding="12,8"
+                            BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1">
+                        <Grid ColumnDefinitions="Auto, Auto, *, Auto, Auto, Auto" ColumnSpacing="6">
+                            <ic:SymbolIcon Symbol="DocumentFolder" FontSize="14" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="WORKSPACE SELECTION MANIFEST" Foreground="{DynamicResource TextPrimaryBrush}"
+                                       FontSize="10" FontWeight="Bold" LetterSpacing="0.5" VerticalAlignment="Center"/>
+
+                            <!-- Quick Select Action Buttons -->
+                            <Button Grid.Column="3" Classes="pill-btn" Command="{Binding SelectModifiedOnlyCommand}"
+                                    IsEnabled="{Binding !IsBusy}" ToolTip.Tip="Select only modified, new and deleted files" Padding="8,3">
+                                <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                    <ic:SymbolIcon Symbol="Filter" FontSize="11" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Modified Only" FontSize="10" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Grid.Column="4" Classes="pill-btn" Command="{Binding SelectAllCommand}"
+                                    IsEnabled="{Binding !IsBusy}" ToolTip.Tip="Select all workspace files" Padding="8,3">
+                                <TextBlock Text="All" FontSize="10"/>
+                            </Button>
+                            <Button Grid.Column="5" Classes="pill-btn" Command="{Binding DeselectAllCommand}"
+                                    IsEnabled="{Binding !IsBusy}" ToolTip.Tip="Deselect all files" Padding="8,3">
+                                <TextBlock Text="None" FontSize="10"/>
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <!-- Filter / Search Box -->
+                    <Border Grid.Row="1" Background="{DynamicResource PanelBrush}" Padding="8,6"
+                            BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1">
+                        <Grid ColumnDefinitions="24, *">
+                            <ic:SymbolIcon Grid.Column="0" Symbol="Search" FontSize="12"
+                                           Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                            <TextBox Grid.Column="1"
+                                     Text="{Binding SearchQuery}"
+                                     PlaceholderText="Filter files or folders by name or path..."
+                                     FontSize="11"
+                                     Background="Transparent"
+                                     BorderThickness="0"
+                                     CaretBrush="{DynamicResource AccentBrush}"
+                                     Padding="4,2"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- TreeView Area -->
+                    <Border Grid.Row="2" Background="Transparent" Padding="4">
+                        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                            <TreeView ItemsSource="{Binding Files}"
+                                      Background="Transparent"
+                                      SelectionMode="Single">
+                                <TreeView.ItemTemplate>
+                                    <TreeDataTemplate DataType="{x:Type model:FilePatchNode}" ItemsSource="{Binding Children}">
+                                        <Border Padding="4,2" CornerRadius="4">
+                                            <Grid ColumnDefinitions="24, Auto, *, Auto, Auto" MinHeight="26" ColumnSpacing="6">
+                                                <!-- Checkbox -->
+                                                <CheckBox Grid.Column="0"
+                                                          IsChecked="{Binding IsSelected}"
+                                                          HorizontalAlignment="Center"
+                                                          VerticalAlignment="Center"/>
+
+                                                <!-- Directory or File Icon -->
+                                                <ic:SymbolIcon Grid.Column="1" Symbol="Folder"
+                                                               FontSize="13" Foreground="{DynamicResource WarningBrush}"
+                                                               IsVisible="{Binding IsDirectory}" VerticalAlignment="Center"/>
+                                                <ic:SymbolIcon Grid.Column="1" Symbol="Document"
+                                                               FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"
+                                                               IsVisible="{Binding !IsDirectory}" VerticalAlignment="Center"/>
+
+                                                <!-- Relative Name -->
+                                                <TextBlock Grid.Column="2" Text="{Binding Name}"
+                                                           FontSize="11" Foreground="{DynamicResource TextPrimaryBrush}"
+                                                           VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+
+                                                <!-- Status Badge (Files Only) -->
+                                                <Border Grid.Column="3" Classes="status-badge"
+                                                        Classes.modified="{Binding IsModified}"
+                                                        Classes.new="{Binding IsNew}"
+                                                        Classes.deleted="{Binding IsDeleted}"
+                                                        Classes.unchanged="{Binding IsUnchanged}"
+                                                        IsVisible="{Binding !IsDirectory}">
+                                                    <TextBlock Text="{Binding StatusBadgeText}" FontSize="9" FontWeight="Bold"/>
+                                                </Border>
+
+                                                <!-- Size & Modified Date (Files Only) -->
+                                                <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="6"
+                                                            VerticalAlignment="Center" Margin="6,0,0,0" IsVisible="{Binding !IsDirectory}">
+                                                    <TextBlock Text="{Binding FormattedSize}"
+                                                               Foreground="{DynamicResource TextMutedBrush}"
+                                                               FontSize="10" FontFamily="Cascadia Mono, Consolas, Monospace"
+                                                               VerticalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding LastModified, StringFormat='{}{0:MM-dd HH:mm}'}"
+                                                               Foreground="{DynamicResource TextMutedBrush}"
+                                                               FontSize="10" FontFamily="Cascadia Mono, Consolas, Monospace"
+                                                               VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </TreeDataTemplate>
+                                </TreeView.ItemTemplate>
+                            </TreeView>
+                        </ScrollViewer>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- RIGHT PANE: Hot-Patch Execution Console & Controls -->
+            <Border Grid.Column="1" Classes="stat-card" Padding="0" ClipToBounds="True">
+                <Grid RowDefinitions="Auto, Auto, Auto, *">
+                    <!-- Console Header -->
+                    <Border Grid.Row="0" Background="{DynamicResource PanelRaisedBrush}" Padding="12,8"
+                            BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1">
+                        <Grid ColumnDefinitions="Auto, Auto, *, Auto" ColumnSpacing="8">
+                            <ic:SymbolIcon Symbol="DeveloperBoard" FontSize="14" Foreground="{DynamicResource AccentTeal}" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="HOT-PATCH EXECUTION CONSOLE" Foreground="{DynamicResource TextPrimaryBrush}"
+                                       FontSize="10" FontWeight="Bold" LetterSpacing="0.5" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="2" Text="patch-orchestration-stream" Foreground="{DynamicResource TextSecondaryBrush}"
+                                       FontSize="10" FontFamily="Cascadia Mono, Consolas, Monospace" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <Button Grid.Column="3" Classes="pill-btn" Content="Clear" Command="{Binding ClearTerminalCommand}"
+                                    Padding="8,2" FontSize="10" VerticalAlignment="Center"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Rollback Banner (Visible when last snapshot exists) -->
+                    <Border Grid.Row="1" IsVisible="{Binding HasBackupToRollback}"
+                            Background="{DynamicResource WarningSurfaceBrush}"
+                            BorderBrush="{DynamicResource WarningBorderBrush}"
+                            BorderThickness="0,0,0,1"
+                            Padding="12,6">
+                        <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="8" VerticalAlignment="Center">
+                            <ic:SymbolIcon Symbol="Warning" FontSize="14" Foreground="{DynamicResource WarningBrush}" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="{Binding LastBackupPath, StringFormat='Backup snapshot available: {0}'}"
+                                       FontSize="10" Foreground="{DynamicResource WarningBrush}"
+                                       TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                            <Button Grid.Column="2" Classes="pill-btn danger" Command="{Binding RollbackLastPatchCommand}"
+                                    Content="Rollback Snapshot" FontSize="10" Padding="8,3"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Auto-Reload Service Configuration Indicator -->
+                    <Border Grid.Row="2" IsVisible="{Binding AutoReloadService}"
+                            Background="{DynamicResource PanelBrush}"
+                            BorderBrush="{DynamicResource DividerBrush}"
+                            BorderThickness="0,0,0,1"
+                            Padding="12,6">
+                        <StackPanel Spacing="2">
+                            <Grid ColumnDefinitions="Auto, *" ColumnSpacing="6">
+                                <ic:SymbolIcon Symbol="ArrowClockwise" FontSize="12" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" Text="Target Service Orchestration:" FontSize="10" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                            </Grid>
+                            <TextBlock Text="{Binding ComposeFileName, StringFormat='docker compose -f {0} up -d --no-deps'}"
+                                       IsVisible="{Binding IsDockerized}"
+                                       FontSize="10" FontFamily="Cascadia Mono, Consolas, Monospace"
+                                       Foreground="{DynamicResource AccentTeal}"/>
+                            <TextBlock Text="{Binding RestartCommand, FallbackValue='Restart command configured in Settings'}"
+                                       IsVisible="{Binding !IsDockerized}"
+                                       FontSize="10" FontFamily="Cascadia Mono, Consolas, Monospace"
+                                       Foreground="{DynamicResource AccentTeal}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Console Terminal Output -->
+                    <Border Grid.Row="3" Background="{DynamicResource LogSurfaceBrush}" Padding="12">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                            <SelectableTextBlock Text="{Binding TerminalOutput}"
+                                                 FontFamily="Cascadia Mono, Consolas, Courier New, Monospace"
+                                                 FontSize="11"
+                                                 Foreground="{DynamicResource LogTextBrush}"
+                                                 TextWrapping="Wrap"/>
+                        </ScrollViewer>
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             ROW 3: Bottom Status Strip
+             ═══════════════════════════════════════════════════════════════════ -->
+        <Border Grid.Row="3" Background="{DynamicResource PanelBrush}"
+                BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0"
+                Padding="14,6">
+            <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="10">
+                <!-- Busy indicator -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6"
+                            IsVisible="{Binding IsBusy}" VerticalAlignment="Center">
+                    <Border Width="8" Height="8" CornerRadius="4" Background="{DynamicResource AccentBrush}"/>
+                    <TextBlock Text="Orchestrating..." FontSize="11" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Status Message -->
+                <TextBlock Grid.Column="1" Text="{Binding StatusMessage}"
+                           Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11"
+                           FontFamily="Cascadia Mono, Consolas, Monospace"
+                           VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+
+                <!-- Selection Summary & Payload Size -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding FormattedPayloadSize, StringFormat='Payload: {0}'}"
+                               FontSize="11" FontFamily="Cascadia Mono, Consolas, Monospace"
+                               Foreground="{DynamicResource AccentTeal}" VerticalAlignment="Center"/>
+                    <TextBlock Text="•" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center"/>
+                    <TextBlock FontSize="11" FontFamily="Cascadia Mono, Consolas, Monospace"
+                               Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center">
+                        <Run Text="{Binding SelectedFileCount}"/>
+                        <Run Text=" / "/>
+                        <Run Text="{Binding TotalFileCount}"/>
+                        <Run Text=" selected"/>
+                    </TextBlock>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+    </Grid>
+</UserControl>

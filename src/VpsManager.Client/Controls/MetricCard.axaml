@@ -1,0 +1,42 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="using:VpsManager.Client.Controls"
+             x:Class="VpsManager.Client.Controls.MetricCard"
+             x:Name="Root">
+
+    <Border Classes="stat-card" Padding="14">
+        <Grid RowDefinitions="Auto, Auto, Auto, Auto" ClipToBounds="True">
+            <Grid Grid.Row="0" ColumnDefinitions="*, Auto" ColumnSpacing="8">
+                <TextBlock Text="{Binding Header, ElementName=Root}"
+                           FontSize="10" FontWeight="SemiBold" LetterSpacing="0.5"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
+                           TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="1" Text="{Binding Value, ElementName=Root}"
+                           FontSize="15" FontWeight="Bold"
+                           Foreground="{Binding Level, ElementName=Root, Converter={StaticResource BrushForLevelConverter}}"/>
+            </Grid>
+
+            <ProgressBar Grid.Row="1" Value="{Binding Percent, ElementName=Root}" Minimum="0" Maximum="100" Height="6"
+                         IsVisible="{Binding HasBar, ElementName=Root}"
+                         Foreground="{Binding Level, ElementName=Root, Converter={StaticResource BrushForLevelConverter}}"
+                         Background="{DynamicResource AppSurfaceBrush}"
+                         Margin="0,9,0,6" HorizontalAlignment="Stretch"/>
+
+            <controls:Sparkline Grid.Row="2" Height="26" Margin="0,2,0,6"
+                                Values="{Binding Series, ElementName=Root}"
+                                Stroke="{Binding Level, ElementName=Root, Converter={StaticResource BrushForLevelConverter}}"
+                                IsVisible="{Binding HasSeries, ElementName=Root}"/>
+
+            <Grid Grid.Row="3" ColumnDefinitions="*, Auto" ColumnSpacing="8">
+                <TextBlock Text="{Binding Detail, ElementName=Root}" FontSize="10"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
+                           TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="1" Text="{Binding DeltaText, ElementName=Root}" FontSize="10"
+                           FontWeight="SemiBold"
+                           Foreground="{Binding Level, ElementName=Root, Converter={StaticResource BrushForLevelConverter}}"
+                           IsVisible="{Binding HasDelta, ElementName=Root}"
+                           VerticalAlignment="Center"/>
+            </Grid>
+        </Grid>
+    </Border>
+</UserControl>

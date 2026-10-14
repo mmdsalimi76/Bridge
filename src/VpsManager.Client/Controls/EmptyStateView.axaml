@@ -1,0 +1,43 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="VpsManager.Client.Controls.EmptyStateView"
+             x:Name="Root">
+
+    <Border Background="{DynamicResource PanelBrush}" 
+            BorderBrush="{DynamicResource DividerBrush}" 
+            BorderThickness="1" 
+            CornerRadius="8" 
+            Padding="32" 
+            HorizontalAlignment="Stretch">
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10" MaxWidth="440">
+            <TextBlock Text="{Binding Icon, ElementName=Root}" 
+                       FontSize="36" 
+                       HorizontalAlignment="Center" 
+                       Opacity="0.85"/>
+            <TextBlock Text="{Binding Title, ElementName=Root}" 
+                       FontSize="16" 
+                       FontWeight="Bold" 
+                       Foreground="{DynamicResource TextPrimaryBrush}" 
+                       HorizontalAlignment="Center" 
+                       TextAlignment="Center"/>
+            <TextBlock Text="{Binding Description, ElementName=Root}" 
+                       FontSize="12" 
+                       Foreground="{DynamicResource TextSecondaryBrush}" 
+                       HorizontalAlignment="Center" 
+                       TextAlignment="Center" 
+                       TextWrapping="Wrap"/>
+            <Button Content="{Binding ActionText, ElementName=Root}" 
+                    Command="{Binding ActionCommand, ElementName=Root}" 
+                    CommandParameter="{Binding ActionCommandParameter, ElementName=Root}"
+                    IsVisible="{Binding HasAction, ElementName=Root}"
+                    Background="{DynamicResource AccentStrongBrush}" 
+                    Foreground="White" 
+                    HorizontalAlignment="Center" 
+                    Margin="0,8,0,0"
+                    Padding="16,8"
+                    FontWeight="SemiBold"
+                    CornerRadius="6"
+                    Cursor="Hand"/>
+        </StackPanel>
+    </Border>
+</UserControl>

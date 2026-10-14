@@ -1,0 +1,667 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:VpsManager.Client.ViewModels"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             xmlns:terminal="using:VpsManager.Client.Views.Controls"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1250" d:DesignHeight="880"
+             x:Class="VpsManager.Client.Views.SetupView"
+             x:DataType="vm:SetupViewModel"
+             Background="{DynamicResource AppSurfaceBrush}">
+
+    <UserControl.Styles>
+        <!-- Step Cards -->
+        <Style Selector="Border.step-card">
+            <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="12,10"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Border.step-card:pointerover">
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource PanelRaisedBrush}"/>
+        </Style>
+
+        <!-- Category Headers in Modules Checklist -->
+        <Style Selector="TextBlock.category-header">
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="Margin" Value="2,8,0,4"/>
+        </Style>
+
+        <!-- Status Badges -->
+        <Style Selector="Border.status-badge">
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="6,2"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="Border.status-badge.success">
+            <Setter Property="Background" Value="{DynamicResource SuccessSurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SuccessBorderBrush}"/>
+        </Style>
+        <Style Selector="Border.status-badge.success TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+        </Style>
+        <Style Selector="Border.status-badge.failed">
+            <Setter Property="Background" Value="{DynamicResource DangerSurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DangerBorderBrush}"/>
+        </Style>
+        <Style Selector="Border.status-badge.failed TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource DangerBrush}"/>
+        </Style>
+        <Style Selector="Border.status-badge.running">
+            <Setter Property="Background" Value="{DynamicResource AccentSurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+        </Style>
+        <Style Selector="Border.status-badge.running TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+        </Style>
+
+        <!-- Connection indicators -->
+        <Style Selector="TextBlock.connected">
+            <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+        </Style>
+        <Style Selector="TextBlock.disconnected">
+            <Setter Property="Foreground" Value="{DynamicResource DangerBrush}"/>
+        </Style>
+
+        <!-- Toolbar Button Styles -->
+        <Style Selector="Button.toolbar-btn">
+            <Setter Property="Background" Value="{DynamicResource PanelRaisedBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.toolbar-btn:pointerover">
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        </Style>
+        <Style Selector="Button.toolbar-btn.active">
+            <Setter Property="Background" Value="{DynamicResource AccentSurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+        </Style>
+
+        <Style Selector="TextBox">
+            <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="8,5"/>
+            <Setter Property="FontSize" Value="11"/>
+        </Style>
+        <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="Auto, *" Margin="20,16,20,14" RowSpacing="12" ClipToBounds="True">
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             ROW 0: Top Header & Control Strip (Responsive 2-Line Layout)
+             ═══════════════════════════════════════════════════════════════════ -->
+        <Grid Grid.Row="0" RowDefinitions="Auto, Auto, Auto" RowSpacing="10" ClipToBounds="True">
+
+            <!-- Line 1: Identity, Target Profile, Live Status, and Real-time Telemetry -->
+            <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto" VerticalAlignment="Center">
+
+                <!-- Left: Title + Badges -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                    <TextBlock Text="Server Setup &amp; Provisioning" FontSize="20" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+
+                    <!-- Target Profile Badge -->
+                    <Border Background="{DynamicResource PanelRaisedBrush}" BorderBrush="{DynamicResource DividerBrush}"
+                            BorderThickness="1" CornerRadius="6" Padding="8,4" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <TextBlock Text="Target:" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBlock Text="{Binding ProfileName}" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource AccentTeal}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Target OS Badge -->
+                    <Border Background="{DynamicResource PanelRaisedBrush}" BorderBrush="{DynamicResource DividerBrush}"
+                            BorderThickness="1" CornerRadius="6" Padding="8,4" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <TextBlock Text="OS:" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBlock Text="{Binding TargetOS}" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource AccentTeal}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Live SSH Connection Badge -->
+                    <Border Background="{DynamicResource PanelRaisedBrush}" BorderBrush="{DynamicResource DividerBrush}"
+                            BorderThickness="1" CornerRadius="6" Padding="8,4" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <Ellipse Width="7" Height="7" Fill="{DynamicResource SuccessBrush}" IsVisible="{Binding IsConnected}" VerticalAlignment="Center"/>
+                            <Ellipse Width="7" Height="7" Fill="{DynamicResource DangerBrush}" IsVisible="{Binding !IsConnected}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding ConnectionStatusText}" FontSize="10" FontWeight="SemiBold"
+                                       Classes.connected="{Binding IsConnected}"
+                                       Classes.disconnected="{Binding !IsConnected}"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Provisioning State Badge -->
+                    <Border Background="{DynamicResource PanelRaisedBrush}" BorderBrush="{DynamicResource DividerBrush}"
+                            BorderThickness="1" CornerRadius="6" Padding="8,4" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <Ellipse Width="7" Height="7" Fill="{DynamicResource AccentBrush}" IsVisible="{Binding IsRunning}" VerticalAlignment="Center"/>
+                            <Ellipse Width="7" Height="7" Fill="{DynamicResource TextMutedBrush}" IsVisible="{Binding !IsRunning}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding ProvisioningStateBadgeText}" FontSize="10" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Right: Status Message, Progress Bar, and Cancel Button -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding StatusMessage}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
+                               VerticalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="380"/>
+
+                    <!-- Determinate Progress Bar for Setup Steps -->
+                    <ProgressBar Width="70" Height="4" VerticalAlignment="Center"
+                                 IsVisible="{Binding IsRunning}"
+                                 Value="{Binding ProgressPercentage}"
+                                 Minimum="0" Maximum="100"
+                                 Foreground="{DynamicResource AccentBrush}"/>
+
+                    <!-- Cancel Button for Running Provisioning -->
+                    <Button Classes="pill-btn danger" Command="{Binding CancelCommand}"
+                            IsVisible="{Binding IsRunning}" ToolTip.Tip="Abort server provisioning run"
+                            Padding="8,3" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <ic:SymbolIcon Symbol="Dismiss" FontSize="11" VerticalAlignment="Center"/>
+                            <TextBlock Text="Cancel" FontSize="10" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <!-- Warning Banner if Target OS is Windows -->
+            <Border Grid.Row="1" Background="{DynamicResource WarningSurfaceBrush}" BorderBrush="{DynamicResource WarningBorderBrush}"
+                    BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,2,0,2"
+                    IsVisible="{Binding IsWindowsTarget}">
+                <Grid ColumnDefinitions="Auto, *">
+                    <TextBlock Text="⚠️" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="1" FontSize="11" Foreground="{DynamicResource WarningBrush}" VerticalAlignment="Center" TextWrapping="Wrap">
+                        <Run FontWeight="Bold">Windows VPS Notice:</Run>
+                        <Run>The automated setup modules below (APT updates, UFW firewall, fail2ban, unattended upgrades) target Debian/Ubuntu Linux systems. On Windows VPS, install features and configure services via PowerShell.</Run>
+                    </TextBlock>
+                </Grid>
+            </Border>
+
+            <!-- Line 2: Action Buttons (Left) and Quick Presets Strip (Right) -->
+            <Grid Grid.Row="2" ColumnDefinitions="Auto, *, Auto" VerticalAlignment="Center">
+
+                <!-- Left: Execution Actions -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <Button Classes="action-btn" Command="{Binding RunSelectedCommand}"
+                            IsEnabled="{Binding !IsRunning}"
+                            Background="{DynamicResource AccentStrongBrush}" Foreground="White"
+                            ToolTip.Tip="Execute all selected configuration modules on remote VPS">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <ic:SymbolIcon Symbol="Play" FontSize="11" VerticalAlignment="Center"/>
+                            <TextBlock Text="Run Selected Setup" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Classes="pill-btn" Command="{Binding RunPreflightCommand}"
+                            IsEnabled="{Binding !IsRunning}"
+                            ToolTip.Tip="Inspect OS, kernel, RAM, and disk free space without modifying files">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <ic:SymbolIcon Symbol="Search" FontSize="11" VerticalAlignment="Center"/>
+                            <TextBlock Text="Inspect Server (Preflight)" FontSize="10" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <!-- Right: Quick Presets & Selection Toggles -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <TextBlock Text="Presets:" FontSize="10" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,2,0"/>
+                    <Button Classes="pill-btn" Content="🚀 Full Web Stack" Command="{Binding ApplyFullStackPresetCommand}"
+                            IsEnabled="{Binding !IsRunning}" Padding="8,4" FontSize="10"/>
+                    <Button Classes="pill-btn" Content="🐳 Docker Host" Command="{Binding ApplyDockerPresetCommand}"
+                            IsEnabled="{Binding !IsRunning}" Padding="8,4" FontSize="10"/>
+                    <Button Classes="pill-btn" Content="🛡️ Hardened Baseline" Command="{Binding ApplyHardenedPresetCommand}"
+                            IsEnabled="{Binding !IsRunning}" Padding="8,4" FontSize="10"/>
+
+                    <Border Width="1" Height="14" Background="{DynamicResource DividerBrush}" Margin="2,0"/>
+
+                    <Button Classes="pill-btn" Content="Select All" Command="{Binding SelectAllCommand}"
+                            IsEnabled="{Binding !IsRunning}" Padding="8,4" FontSize="10"/>
+                    <Button Classes="pill-btn" Content="Clear" Command="{Binding ClearAllCommand}"
+                            IsEnabled="{Binding !IsRunning}" Padding="8,4" FontSize="10"/>
+                </StackPanel>
+            </Grid>
+        </Grid>
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             ROW 1: Main Workspace Split (Left: Modules Checklist, Right: Live Console)
+             ═══════════════════════════════════════════════════════════════════ -->
+        <Grid Grid.Row="1" ColumnDefinitions="1.05*, 14, 1.25*">
+
+            <!-- Left Column: Provisioning Recipe Modules Checklist -->
+            <Border Grid.Column="0" Classes="glass-card" Padding="16,14">
+                <Grid RowDefinitions="Auto, *">
+
+                    <!-- Section Header -->
+                    <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,10">
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="CONFIGURATION RECIPE" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}"/>
+                            <TextBlock Text="Select provisioning modules to apply" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Scrollable Modules List -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,0,6,0">
+                        <StackPanel Spacing="4">
+
+                            <!-- ── SECTION 1: SYSTEM & PACKAGE MANAGER ──────────────── -->
+                            <TextBlock Text="SYSTEM &amp; PACKAGE MANAGER" Classes="category-header"/>
+
+                            <!-- Module: Update System -->
+                            <Border Classes="step-card">
+                                <Grid ColumnDefinitions="Auto, *, Auto">
+                                    <CheckBox Grid.Column="0" IsChecked="{Binding UpdateSystem}" IsEnabled="{Binding !IsRunning}" VerticalAlignment="Top" Margin="0,2,0,0"/>
+                                    <StackPanel Grid.Column="1" Margin="10,0,8,0" Spacing="2">
+                                        <TextBlock Text="🔄 Update System Packages" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                        <TextBlock Text="Runs apt update and unattended upgrade with defensive lock-wait and DPkg non-interactive flags."
+                                                   Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                        <Border Classes="status-badge running" IsVisible="{Binding UpdateSystemStatus, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:StepExecutionStatus.Running}}">
+                                            <TextBlock Text="Running..." FontSize="9"/>
+                                        </Border>
+                                        <Border Classes="status-badge success" IsVisible="{Binding UpdateSystemStatus, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:StepExecutionStatus.Success}}">
+                                            <TextBlock Text="Completed" FontSize="9"/>
+                                        </Border>
+                                        <Border Classes="status-badge failed" IsVisible="{Binding UpdateSystemStatus, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:StepExecutionStatus.Failed}}">
+                                            <TextBlock Text="Failed" FontSize="9"/>
+                                        </Border>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <!-- Module: Essential Tools -->
+                            <Border Classes="step-card">
+                                <Grid ColumnDefinitions="Auto, *, Auto">
+                                    <CheckBox Grid.Column="0" IsChecked="{Binding InstallEssentials}" IsEnabled="{Binding !IsRunning}" VerticalAlignment="Top" Margin="0,2,0,0"/>
+                                    <StackPanel Grid.Column="1" Margin="10,0,8,0" Spacing="2">
+                                        <TextBlock Text="🛠️ Essential Server Tools" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                        <TextBlock Text="Installs curl, Git, unzip, wget, vim, htop, ncdu, rsync, and ca-certificates."
+                                                   Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                        <Border Classes="status-badge running" IsVisible="{Binding InstallEssentialsStatus, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:StepExecutionStatus.Running}}">
+                                            <TextBlock Text="Running..." FontSize="9"/>
+                                        </Border>
+                                        <Border Classes="status-badge success" IsVisible="{Binding InstallEssentialsStatus, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:StepExecutionStatus.Success}}">
+                                            <TextBlock Text="Completed" FontSize="9"/>
+                                        </Border>
+                                        <Border Classes="status-badge failed" IsVisible="{Binding InstallEssentialsStatus, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:StepExecutionStatus.Failed}}">
+                                            <TextBlock Text="Failed" FontSize="9"/>
+                                        </Border>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <!-- Module: Package Mirror URL (Optional) -->
+                            <Border Classes="step-card" Background="{DynamicResource PanelRaisedBrush}">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="🌐 APT Package Mirror URL (Optional)" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    <TextBox Text="{Binding PackageMirrorUrl}" PlaceholderText="https://archive.ubuntu.com/ubuntu" IsEnabled="{Binding !IsRunning}"/>
+                                    <TextBlock Text="Overrides default APT mirrors for accelerated downloads in restricted or local regions."
+                                               Foreground="{DynamicResource TextMutedBrush}" FontSize="9"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- ── SECTION 2: CONTAINER RUNTIME ─────────────────────── -->
+                            <TextBlock Text="CONTAINER RUNTIME" Classes="category-header"/>
+
+                            <!-- Module: Docker Engine & Compose -->
+                            <Border Classes="step-card">
+                                <Grid ColumnDefinitions="Auto, *, Auto">
+                                    <CheckBox Grid.Column="0" IsChecked="{Binding InstallDocker}" IsEnabled="{Binding !IsRunning}" VerticalAlignment="Top" Margin="0,2,0,0"/>
+                                    <StackPanel Grid.Column="1" Margin="10,0,8,0" Spacing="4">
+                                        <TextBlock Text="🐳 Docker Engine &amp; Compose Plugin" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                        <TextBlock Text="Installs modern Docker CE, docker-compose-plugin, enables systemd service, and grants user permissions."
+                                                   Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" TextWrapping="Wrap"/>
+                                        <StackPanel Spacing="4" Margin="0,4,0,0">
+                                            <ComboBox ItemsSource="{Binding DockerSources}" SelectedItem="{Binding DockerSource}" IsEnabled="{Binding !IsRunning}" HorizontalAlignment="Stretch" FontSize="11"/>
+                                            <TextBox Text="{Binding DockerRepositoryUrl}" PlaceholderText="https://download.docker.com/linux/ubuntu" IsVisible="{Binding IsCustomDockerSource}" IsEnabled="{Binding !IsRunning}" Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                        <Border Classes="status-badge running" IsVisible="{Binding InstallDockerStatus, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:StepExecutionStatus.Running}}">
+                                            <TextBlock Text="Running..." FontSize="9"/>
+                                        </Border>
+                                        <Border Classes="status-badge success" IsVisible="{Binding InstallDockerStatus, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:StepExecutionStatus.Success}}">
+                                            <TextBlock Text="Completed" FontSize="9"/>
+                                        </Border>
+                                        <Border Classes="status-badge failed" IsVisible="{Binding InstallDockerStatus, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:StepExecutionStatus.Failed}}">
+                                            <TextBlock Text="Failed" FontSize="9"/>
+                                        </Border>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <!-- ── SECTION 3: SECURITY & FIREWALL ──────────────────── -->
+                            <TextBlock Text="SECURITY &amp; FIREWALL" Classes="category-header"/>
+
+                            <!-- Module: UFW Firewall -->
+                            <Border Classes="step-card">
+                                <Grid ColumnDefinitions="Auto, *, Auto">
+                                    <CheckBox Grid.Column="0" IsChecked="{Binding ConfigureFirewall}" IsEnabled="{Binding !IsRunning}" VerticalAlignment="Top" Margin="0,2,0,0"/>
+                                    <StackPanel Grid.Column="1" Margin="10,0,8,0" Spacing="2">
+                                        <TextBlock Text="🛡️ Configure UFW Firewall" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                        <TextBlock Text="Opens OpenSSH (22), HTTP (80), HTTPS (443) before enabling firewall."
+                                                   Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                        <Border Classes="status-badge running" IsVisible="{Binding ConfigureFirewallStatus, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:StepExecutionStatus.Running}}">
+                                            <TextBlock Text="Running..." FontSize="9"/>
+                                        </Border>
+                                        <Border Classes="status-badge success" IsVisible="{Binding ConfigureFirewallStatus, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:StepExecutionStatus.Success}}">
+                                            <TextBlock Text="Completed" FontSize="9"/>
+                                        </Border>
+                                        <Border Classes="status-badge failed" IsVisible="{Binding ConfigureFirewallStatus, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:StepExecutionStatus.Failed}}">
+                                            <TextBlock Text="Failed" FontSize="9"/>
+                                        </Border>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <!-- Module: Fail2Ban -->
+                            <Border Classes="step-card">
+                                <Grid ColumnDefinitions="Auto, *, Auto">
+                                    <CheckBox Grid.Column="0" IsChecked="{Binding InstallFail2Ban}" IsEnabled="{Binding !IsRunning}" VerticalAlignment="Top" Margin="0,2,0,0"/>
+                                    <StackPanel Grid.Column="1" Margin="10,0,8,0" Spacing="2">
+                                        <TextBlock Text="🔒 Install &amp; Enable Fail2Ban" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                        <TextBlock Text="Auto-bans abusive IP addresses after repeated failed SSH login attempts."
+                                                   Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                        <Border Classes="status-badge running" IsVisible="{Binding InstallFail2BanStatus, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:StepExecutionStatus.Running}}">
+                                            <TextBlock Text="Running..." FontSize="9"/>
+                                        </Border>
+                                        <Border Classes="status-badge success" IsVisible="{Binding InstallFail2BanStatus, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:StepExecutionStatus.Success}}">
+                                            <TextBlock Text="Completed" FontSize="9"/>
+                                        </Border>
+                                        <Border Classes="status-badge failed" IsVisible="{Binding InstallFail2BanStatus, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:StepExecutionStatus.Failed}}">
+                                            <TextBlock Text="Failed" FontSize="9"/>
+                                        </Border>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <!-- Module: Unattended Security Upgrades -->
+                            <Border Classes="step-card">
+                                <Grid ColumnDefinitions="Auto, *, Auto">
+                                    <CheckBox Grid.Column="0" IsChecked="{Binding EnableUnattendedUpgrades}" IsEnabled="{Binding !IsRunning}" VerticalAlignment="Top" Margin="0,2,0,0"/>
+                                    <StackPanel Grid.Column="1" Margin="10,0,8,0" Spacing="2">
+                                        <TextBlock Text="⚡ Automatic Security Upgrades" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                        <TextBlock Text="Installs unattended-upgrades to automatically apply critical OS security patches."
+                                                   Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                        <Border Classes="status-badge running" IsVisible="{Binding EnableUnattendedUpgradesStatus, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:StepExecutionStatus.Running}}">
+                                            <TextBlock Text="Running..." FontSize="9"/>
+                                        </Border>
+                                        <Border Classes="status-badge success" IsVisible="{Binding EnableUnattendedUpgradesStatus, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:StepExecutionStatus.Success}}">
+                                            <TextBlock Text="Completed" FontSize="9"/>
+                                        </Border>
+                                        <Border Classes="status-badge failed" IsVisible="{Binding EnableUnattendedUpgradesStatus, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:StepExecutionStatus.Failed}}">
+                                            <TextBlock Text="Failed" FontSize="9"/>
+                                        </Border>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <!-- Module: SSH Hardening -->
+                            <Border Classes="step-card">
+                                <Grid ColumnDefinitions="Auto, *, Auto">
+                                    <CheckBox Grid.Column="0" IsChecked="{Binding HardenSshSecurity}" IsEnabled="{Binding !IsRunning}" VerticalAlignment="Top" Margin="0,2,0,0"/>
+                                    <StackPanel Grid.Column="1" Margin="10,0,8,0" Spacing="2">
+                                        <TextBlock Text="🛡️ SSH Server Hardening" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                        <TextBlock Text="Disables empty passwords, enforces client alive timeouts, and applies drop-in security config."
+                                                   Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                        <Border Classes="status-badge running" IsVisible="{Binding HardenSshSecurityStatus, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:StepExecutionStatus.Running}}">
+                                            <TextBlock Text="Running..." FontSize="9"/>
+                                        </Border>
+                                        <Border Classes="status-badge success" IsVisible="{Binding HardenSshSecurityStatus, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:StepExecutionStatus.Success}}">
+                                            <TextBlock Text="Completed" FontSize="9"/>
+                                        </Border>
+                                        <Border Classes="status-badge failed" IsVisible="{Binding HardenSshSecurityStatus, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:StepExecutionStatus.Failed}}">
+                                            <TextBlock Text="Failed" FontSize="9"/>
+                                        </Border>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <!-- ── SECTION 4: STORAGE & WORKSPACES ─────────────────── -->
+                            <TextBlock Text="STORAGE &amp; WORKSPACES" Classes="category-header"/>
+
+                            <!-- Module: Swap Space -->
+                            <Border Classes="step-card">
+                                <Grid ColumnDefinitions="Auto, *, Auto">
+                                    <CheckBox Grid.Column="0" IsChecked="{Binding CreateSwap}" IsEnabled="{Binding !IsRunning}" VerticalAlignment="Top" Margin="0,2,0,0"/>
+                                    <StackPanel Grid.Column="1" Margin="10,0,8,0" Spacing="4">
+                                        <TextBlock Text="💾 Configure Swap Space" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                        <TextBlock Text="Prevents Out-Of-Memory (OOM) killer terminations on compact cloud instances."
+                                                   Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" TextWrapping="Wrap"/>
+                                        <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,4,0,0" VerticalAlignment="Center">
+                                            <TextBlock Text="Size:" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" VerticalAlignment="Center"/>
+                                            <NumericUpDown Value="{Binding SwapSizeGb}" Minimum="1" Maximum="64" Width="110" FormatString="0"
+                                                           IsEnabled="{Binding !IsRunning}" VerticalAlignment="Center"/>
+                                            <TextBlock Text="GB" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                        <Border Classes="status-badge running" IsVisible="{Binding CreateSwapStatus, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:StepExecutionStatus.Running}}">
+                                            <TextBlock Text="Running..." FontSize="9"/>
+                                        </Border>
+                                        <Border Classes="status-badge success" IsVisible="{Binding CreateSwapStatus, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:StepExecutionStatus.Success}}">
+                                            <TextBlock Text="Completed" FontSize="9"/>
+                                        </Border>
+                                        <Border Classes="status-badge failed" IsVisible="{Binding CreateSwapStatus, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:StepExecutionStatus.Failed}}">
+                                            <TextBlock Text="Failed" FontSize="9"/>
+                                        </Border>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <!-- Module: Project Workspace Directory -->
+                            <Border Classes="step-card">
+                                <Grid ColumnDefinitions="Auto, *, Auto">
+                                    <CheckBox Grid.Column="0" IsChecked="{Binding PrepareProjectDirectory}" IsEnabled="{Binding !IsRunning}" VerticalAlignment="Top" Margin="0,2,0,0"/>
+                                    <StackPanel Grid.Column="1" Margin="10,0,8,0" Spacing="4">
+                                        <TextBlock Text="📁 Prepare Project Workspace" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                        <TextBlock Text="Recursively provisions target directory and assigns ownership to the SSH user."
+                                                   Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" TextWrapping="Wrap"/>
+                                        <TextBox Text="{Binding ProjectDirectory}" PlaceholderText="/var/www/my_app" IsEnabled="{Binding !IsRunning}" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                        <Border Classes="status-badge running" IsVisible="{Binding PrepareProjectDirectoryStatus, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:StepExecutionStatus.Running}}">
+                                            <TextBlock Text="Running..." FontSize="9"/>
+                                        </Border>
+                                        <Border Classes="status-badge success" IsVisible="{Binding PrepareProjectDirectoryStatus, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:StepExecutionStatus.Success}}">
+                                            <TextBlock Text="Completed" FontSize="9"/>
+                                        </Border>
+                                        <Border Classes="status-badge failed" IsVisible="{Binding PrepareProjectDirectoryStatus, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:StepExecutionStatus.Failed}}">
+                                            <TextBlock Text="Failed" FontSize="9"/>
+                                        </Border>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <!-- ── SECTION 5: OPTIONAL WEB & RUNTIMES ──────────────── -->
+                            <TextBlock Text="OPTIONAL WEB &amp; RUNTIMES" Classes="category-header"/>
+
+                            <!-- Module: Node.js Runtime -->
+                            <Border Classes="step-card">
+                                <Grid ColumnDefinitions="Auto, *, Auto">
+                                    <CheckBox Grid.Column="0" IsChecked="{Binding InstallNodeJs}" IsEnabled="{Binding !IsRunning}" VerticalAlignment="Top" Margin="0,2,0,0"/>
+                                    <StackPanel Grid.Column="1" Margin="10,0,8,0" Spacing="2">
+                                        <TextBlock Text="🟩 Node.js &amp; npm Runtime" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                        <TextBlock Text="Installs Node.js and npm package manager for JavaScript / TypeScript applications."
+                                                   Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                        <Border Classes="status-badge running" IsVisible="{Binding InstallNodeJsStatus, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:StepExecutionStatus.Running}}">
+                                            <TextBlock Text="Running..." FontSize="9"/>
+                                        </Border>
+                                        <Border Classes="status-badge success" IsVisible="{Binding InstallNodeJsStatus, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:StepExecutionStatus.Success}}">
+                                            <TextBlock Text="Completed" FontSize="9"/>
+                                        </Border>
+                                        <Border Classes="status-badge failed" IsVisible="{Binding InstallNodeJsStatus, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:StepExecutionStatus.Failed}}">
+                                            <TextBlock Text="Failed" FontSize="9"/>
+                                        </Border>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <!-- Module: Nginx Reverse Proxy -->
+                            <Border Classes="step-card">
+                                <Grid ColumnDefinitions="Auto, *, Auto">
+                                    <CheckBox Grid.Column="0" IsChecked="{Binding InstallNginx}" IsEnabled="{Binding !IsRunning}" VerticalAlignment="Top" Margin="0,2,0,0"/>
+                                    <StackPanel Grid.Column="1" Margin="10,0,8,0" Spacing="2">
+                                        <TextBlock Text="🌐 Nginx Web Server" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                        <TextBlock Text="Installs Nginx HTTP server, enables systemd daemon, and creates default configuration."
+                                                   Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                        <Border Classes="status-badge running" IsVisible="{Binding InstallNginxStatus, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:StepExecutionStatus.Running}}">
+                                            <TextBlock Text="Running..." FontSize="9"/>
+                                        </Border>
+                                        <Border Classes="status-badge success" IsVisible="{Binding InstallNginxStatus, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:StepExecutionStatus.Success}}">
+                                            <TextBlock Text="Completed" FontSize="9"/>
+                                        </Border>
+                                        <Border Classes="status-badge failed" IsVisible="{Binding InstallNginxStatus, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:StepExecutionStatus.Failed}}">
+                                            <TextBlock Text="Failed" FontSize="9"/>
+                                        </Border>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!-- Right Column: Live Console & Preflight Telemetry -->
+            <Border Grid.Column="2" Classes="glass-card" Padding="0" Background="{DynamicResource LogSurfaceBrush}" ClipToBounds="True">
+                <Grid RowDefinitions="Auto, Auto, Auto, *">
+
+                    <!-- Console Title Bar -->
+                    <Border Grid.Row="0" Background="{DynamicResource PanelRaisedBrush}" Padding="16,10"
+                            BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1">
+                        <Grid ColumnDefinitions="Auto, *, Auto">
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                <TextBlock Text="LIVE OUTPUT" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}"/>
+                                <TextBlock Text="•" Foreground="{DynamicResource TextMutedBrush}" FontSize="10"/>
+                                <TextBlock Text="setup-provisioning.log" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
+                                           FontFamily="Cascadia Mono, Consolas, monospace"/>
+                            </StackPanel>
+
+                            <!-- Toolbar Actions -->
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6">
+                                <Button Classes="toolbar-btn" Classes.active="{Binding AutoScroll}" Command="{Binding ToggleAutoScrollCommand}"
+                                        ToolTip.Tip="Automatically scroll to latest log output">
+                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                        <ic:SymbolIcon Symbol="ArrowDown" FontSize="10" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Auto-Scroll" FontSize="10" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <Button Classes="toolbar-btn" Classes.active="{Binding WordWrap}" Command="{Binding ToggleWordWrapCommand}"
+                                        ToolTip.Tip="Toggle long line wrapping">
+                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                        <ic:SymbolIcon Symbol="TextWrap" FontSize="10" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Wrap" FontSize="10" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <Button Classes="pill-btn" Command="{Binding CopyLogCommand}"
+                                        ToolTip.Tip="Copy all output to clipboard">
+                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                        <ic:SymbolIcon Symbol="Copy" FontSize="10" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Copy" FontSize="10" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <Button Classes="pill-btn" Command="{Binding ClearLogCommand}"
+                                        ToolTip.Tip="Clear output log">
+                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                        <ic:SymbolIcon Symbol="Dismiss" FontSize="10" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Clear" FontSize="10" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Top Progress Bar (Visible while running) -->
+                    <ProgressBar Grid.Row="1" Value="{Binding ProgressPercentage}" Minimum="0" Maximum="100"
+                                 Height="3" Foreground="{DynamicResource AccentBrush}" Background="{DynamicResource AppSurfaceBrush}"
+                                 IsVisible="{Binding IsRunning}"/>
+
+                    <!-- Preflight Summary Card (Visible if preflight telemetry exists) -->
+                    <Border Grid.Row="2" Background="{DynamicResource PanelRaisedBrush}" Padding="14,10"
+                            BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1"
+                            IsVisible="{Binding HasPreflightData}">
+                        <Grid ColumnDefinitions="*, *, *, *, *">
+                            <StackPanel Grid.Column="0" Spacing="2">
+                                <TextBlock Text="OS DISTRIBUTION" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Text="{Binding DetectedOs}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource AccentTeal}" TextTrimming="CharacterEllipsis"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Spacing="2">
+                                <TextBlock Text="KERNEL" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Text="{Binding DetectedKernel}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" Spacing="2">
+                                <TextBlock Text="ARCHITECTURE" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Text="{Binding DetectedArch}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="3" Spacing="2">
+                                <TextBlock Text="MEMORY" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Text="{Binding DetectedMemory}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="4" Spacing="2">
+                                <TextBlock Text="ROOT DISK" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Text="{Binding DetectedDisk}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource SuccessBrush}" TextTrimming="CharacterEllipsis"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Terminal Output Window (AvaloniaEdit ANSI Syntax Viewer) -->
+                    <terminal:TerminalViewer Grid.Row="3"
+                                             Text="{Binding TerminalOutput}"
+                                             AutoScroll="{Binding AutoScroll}"
+                                             WordWrap="{Binding WordWrap}"
+                                             TerminalFontSize="{Binding TerminalFontSize}"
+                                             StripAnsiCodes="False"
+                                             ColorizeAnsi="True"
+                                             Padding="14,10"/>
+                </Grid>
+            </Border>
+
+        </Grid>
+    </Grid>
+</UserControl>

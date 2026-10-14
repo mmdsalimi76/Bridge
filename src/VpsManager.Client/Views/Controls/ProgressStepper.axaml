@@ -1,0 +1,69 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:models="using:VpsManager.Core.Models"
+             xmlns:converters="using:VpsManager.Client.Converters"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="200"
+             x:Class="VpsManager.Client.Views.Controls.ProgressStepper"
+             x:Name="RootControl">
+
+    <UserControl.Resources>
+        <converters:StatusToColorConverter x:Key="StepBrushConverter"/>
+        <converters:StepStatusToBackgroundConverter x:Key="StepBgConverter"/>
+    </UserControl.Resources>
+
+    <ItemsControl x:Name="StepsContainer" ItemsSource="{Binding Steps, ElementName=RootControl}">
+        <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+                <WrapPanel Orientation="Horizontal"/>
+            </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="models:PipelineStep">
+                <Border MinWidth="155"
+                        Background="{Binding Status, Converter={StaticResource StepBgConverter}}"
+                        BorderBrush="{Binding Status, Converter={StaticResource StepBrushConverter}}"
+                        BorderThickness="1.5"
+                        CornerRadius="8"
+                        Padding="12,9"
+                        Margin="0,0,10,10">
+                    <StackPanel Spacing="5">
+                        <!-- Header Row: Step ID Badge + Status Icon -->
+                        <Grid ColumnDefinitions="Auto, *">
+                            <Border Grid.Column="0"
+                                    Background="{DynamicResource PanelRaisedBrush}"
+                                    CornerRadius="4"
+                                    Padding="6,2"
+                                    Margin="0,0,4,0">
+                                <TextBlock Text="{Binding Id, StringFormat='STEP {0}'}"
+                                           FontSize="9"
+                                           FontWeight="Bold"
+                                           Foreground="{Binding Status, Converter={StaticResource StepBrushConverter}}"/>
+                            </Border>
+
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding StatusIcon}"
+                                       FontSize="13"
+                                       HorizontalAlignment="Right"
+                                       Foreground="{Binding Status, Converter={StaticResource StepBrushConverter}}"/>
+                        </Grid>
+
+                        <!-- Step Name -->
+                        <TextBlock Text="{Binding Name}"
+                                   FontSize="11"
+                                   FontWeight="SemiBold"
+                                   TextWrapping="NoWrap"
+                                   TextTrimming="CharacterEllipsis"
+                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+
+                        <!-- Duration / State Display -->
+                        <TextBlock Text="{Binding DurationDisplay}"
+                                   FontSize="10"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    </StackPanel>
+                </Border>
+            </DataTemplate>
+        </ItemsControl.ItemTemplate>
+    </ItemsControl>
+</UserControl>

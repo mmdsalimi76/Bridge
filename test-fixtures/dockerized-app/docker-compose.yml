@@ -1,0 +1,9 @@
+services:
+  web:
+    build: .
+    container_name: test-web-app
+    ports:
+      - "8080:8080"
+    environment:
+      - SIMULATE_FAILURE=false
+    restart: unless-stopped

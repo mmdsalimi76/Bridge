@@ -1,0 +1,251 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="VpsManager.Client.App"
+             xmlns:local="using:VpsManager.Client"
+             xmlns:converters="using:VpsManager.Client.Converters"
+             xmlns:semi="https://irihi.tech/semi"
+             RequestedThemeVariant="Dark">
+
+    <Application.DataTemplates>
+        <local:ViewLocator />
+    </Application.DataTemplates>
+
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="/Styles/ColorPalette.axaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <converters:StatusToColorConverter x:Key="StatusToColorConverter"/>
+            <converters:StepStatusToBackgroundConverter x:Key="StepStatusToBackgroundConverter"/>
+            <converters:BoolToColorConverter x:Key="BoolToColorConverter"/>
+            <converters:ConnectionStatusToBrushConverter x:Key="ConnectionStatusToBrushConverter"/>
+            <converters:BrushForLevelConverter x:Key="BrushForLevelConverter"/>
+        </ResourceDictionary>
+    </Application.Resources>
+
+    <Application.Styles>
+        <semi:SemiTheme Locale="en-US" />
+        <semi:DataGridSemiTheme />
+        <semi:AvaloniaEditSemiTheme />
+
+        <!-- ═══════════════════════════════════════════════════
+             BASE TYPOGRAPHY & ELEMENTS
+             ═══════════════════════════════════════════════════ -->
+        <Style Selector="Window">
+            <Setter Property="FontFamily" Value="fonts:Inter#Inter, Segoe UI, sans-serif"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource AppSurfaceBrush}"/>
+        </Style>
+        <Style Selector="UserControl">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        </Style>
+        <Style Selector="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        </Style>
+        <Style Selector="SelectableTextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        </Style>
+        <Style Selector="TextBlock.label">
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="LetterSpacing" Value="0"/>
+            <Setter Property="Margin" Value="0,0,0,5"/>
+        </Style>
+
+        <!-- ═══════════════════════════════════════════════════
+             INPUT CONTROLS (TEXTBOX, COMBOBOX, NUMERIC, CHECKS)
+             Guarantees foregrounds, watermarks, and glyphs
+             always use ColorPalette.axaml tokens.
+             ═══════════════════════════════════════════════════ -->
+        <Style Selector="TextBox">
+            <Setter Property="Foreground" Value="{DynamicResource InputForegroundBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource InputBorderBrush}"/>
+            <Setter Property="CaretBrush" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="SelectionBrush" Value="{DynamicResource AccentStrongBrush}"/>
+        </Style>
+        <Style Selector="TextBox /template/ TextBlock#PART_Watermark">
+            <Setter Property="Foreground" Value="{DynamicResource InputPlaceholderBrush}"/>
+        </Style>
+        <Style Selector="TextBox:pointerover">
+            <Setter Property="Background" Value="{DynamicResource InputBackgroundPointerOverBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource InputBorderPointerOverBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource InputForegroundBrush}"/>
+        </Style>
+        <Style Selector="TextBox:focus">
+            <Setter Property="Background" Value="{DynamicResource InputBackgroundFocusedBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource InputBorderFocusedBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource InputForegroundBrush}"/>
+        </Style>
+
+        <Style Selector="ComboBox">
+            <Setter Property="Foreground" Value="{DynamicResource InputForegroundBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource InputBorderBrush}"/>
+        </Style>
+        <Style Selector="ComboBox /template/ PathIcon">
+            <Setter Property="Foreground" Value="{DynamicResource ControlGlyphBrush}"/>
+        </Style>
+        <Style Selector="ComboBox /template/ Path">
+            <Setter Property="Fill" Value="{DynamicResource ControlGlyphBrush}"/>
+        </Style>
+        <Style Selector="ComboBox /template/ TextBlock#PlaceholderTextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource InputPlaceholderBrush}"/>
+        </Style>
+        <Style Selector="ComboBoxItem">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        </Style>
+
+        <Style Selector="NumericUpDown">
+            <Setter Property="Foreground" Value="{DynamicResource InputForegroundBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource InputBorderBrush}"/>
+        </Style>
+        <Style Selector="NumericUpDown /template/ ButtonSpinner">
+            <Setter Property="Foreground" Value="{DynamicResource ControlGlyphBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource InputBorderBrush}"/>
+        </Style>
+        <Style Selector="ButtonSpinner">
+            <Setter Property="Foreground" Value="{DynamicResource ControlGlyphBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource InputBorderBrush}"/>
+        </Style>
+        <Style Selector="ButtonSpinner /template/ PathIcon">
+            <Setter Property="Foreground" Value="{DynamicResource ControlGlyphBrush}"/>
+        </Style>
+        <Style Selector="ButtonSpinner /template/ Path">
+            <Setter Property="Fill" Value="{DynamicResource ControlGlyphBrush}"/>
+        </Style>
+
+        <Style Selector="CheckBox">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        </Style>
+        <Style Selector="RadioButton">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        </Style>
+        <Style Selector="ToggleSwitch">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        </Style>
+
+        <Style Selector="DataGrid">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        </Style>
+        <Style Selector="DataGridColumnHeader">
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+        </Style>
+        <Style Selector="DataGridRow">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        </Style>
+        <Style Selector="DataGridCell">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        </Style>
+
+        <!-- ═══════════════════════════════════════════════════
+             BUTTON VARIANTS
+             ═══════════════════════════════════════════════════ -->
+
+        <!-- Pill button variant -->
+        <Style Selector="Button.pill-btn">
+            <Setter Property="Background" Value="{DynamicResource PanelRaisedBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.pill-btn /template/ ContentPresenter">
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+        </Style>
+        <Style Selector="Button.pill-btn:pointerover">
+            <Setter Property="Background" Value="{DynamicResource AccentStrongBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextWhiteBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+        </Style>
+        <Style Selector="Button.pill-btn:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource AccentStrongBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextWhiteBrush}"/>
+        </Style>
+
+        <!-- Action button variant -->
+        <Style Selector="Button.action-btn">
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+        <Style Selector="Button.action-btn:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource AppSurfaceBrush}"/>
+        </Style>
+
+        <!-- Danger button hover styling -->
+        <Style Selector="Button.danger:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource DangerSurfaceBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource DangerTextBrush}"/>
+        </Style>
+
+        <!-- Preset pill button variant -->
+        <Style Selector="Button.preset-pill">
+            <Setter Property="Background" Value="{DynamicResource PanelRaisedBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.preset-pill:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource AccentStrongBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextWhiteBrush}"/>
+        </Style>
+
+        <!-- ═══════════════════════════════════════════════════
+             CARD CLASSES
+             ═══════════════════════════════════════════════════ -->
+        <Style Selector="Border.glass-card">
+            <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="16"/>
+            <Setter Property="BoxShadow" Value="{DynamicResource PanelShadow}"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.18"/>
+                    <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.18"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Border.glass-card:pointerover">
+            <Setter Property="BorderBrush" Value="{DynamicResource DividerHighlightBrush}"/>
+            <Setter Property="BoxShadow" Value="{DynamicResource PanelShadow}"/>
+        </Style>
+        <Style Selector="Border.stat-card">
+            <Setter Property="Background" Value="{DynamicResource PanelRaisedBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="16"/>
+            <Setter Property="ClipToBounds" Value="True"/>
+            <Setter Property="BoxShadow" Value="{DynamicResource PanelShadow}"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.18"/>
+                    <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.18"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Border.stat-card:pointerover">
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="BoxShadow" Value="{DynamicResource PanelShadow}"/>
+        </Style>
+
+    </Application.Styles>
+</Application>

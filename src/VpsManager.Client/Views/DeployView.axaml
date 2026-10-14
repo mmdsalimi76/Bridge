@@ -1,0 +1,550 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:VpsManager.Client.ViewModels"
+             xmlns:models="using:VpsManager.Core.Models"
+             xmlns:controls="using:VpsManager.Client.Views.Controls"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="850"
+             x:Class="VpsManager.Client.Views.DeployView"
+             x:DataType="vm:DeployViewModel"
+             Background="{DynamicResource AppSurfaceBrush}">
+
+    <Grid>
+        <!-- Main Content Area -->
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <Grid RowDefinitions="Auto, Auto, Auto, Auto, Auto, *" Margin="20,16,20,14" RowSpacing="12" ClipToBounds="True">
+
+                <!-- ═══════════════════════════════════════════════════════════════════
+                     ROW 0: Top Header & Pipeline Control Strip
+                     ═══════════════════════════════════════════════════════════════════ -->
+                <Grid Grid.Row="0" ColumnDefinitions="*, Auto" ColumnSpacing="14">
+                    <StackPanel Spacing="3">
+                        <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                            <TextBlock Text="Deployment Workstation" FontSize="20" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                            <Border Background="{DynamicResource PanelRaisedBrush}" BorderBrush="{DynamicResource DividerBrush}"
+                                    BorderThickness="1" CornerRadius="6" Padding="8,3" VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                    <TextBlock Text="Target:" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    <TextBlock Text="{Binding ProfileName}" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource AccentTeal}"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                        <TextBlock Text="{Binding StatusMessage}" FontSize="11"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <!-- Progress Spinner while running -->
+                        <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsPipelineRunning}" Width="72" Height="4"
+                                     Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
+
+                        <!-- Cancel Button (visible when running) -->
+                        <Button Classes="pill-btn danger" Command="{Binding CancelPipelineCommand}"
+                                IsVisible="{Binding IsPipelineRunning}" ToolTip.Tip="Halt active deployment pipeline">
+                            <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                                <ic:SymbolIcon Symbol="Dismiss" FontSize="12" VerticalAlignment="Center"/>
+                                <TextBlock Text="Cancel" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Reset Button -->
+                        <Button Classes="pill-btn" Command="{Binding ResetPipelineCommand}"
+                                IsEnabled="{Binding !IsPipelineRunning}" ToolTip.Tip="Reset pipeline stepper and terminal output">
+                            <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                                <ic:SymbolIcon Symbol="ArrowCounterclockwise" FontSize="12" VerticalAlignment="Center"/>
+                                <TextBlock Text="Reset" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Primary Deploy Button -->
+                        <Button Classes="action-btn" Command="{Binding RunDeploymentPipelineCommand}"
+                                IsEnabled="{Binding !IsPipelineRunning}" Background="{DynamicResource AccentStrongBrush}"
+                                Foreground="{DynamicResource TextWhiteBrush}" ToolTip.Tip="Execute end-to-end automated pipeline">
+                            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                <ic:SymbolIcon Symbol="Play" FontSize="13" VerticalAlignment="Center"/>
+                                <TextBlock Text="Run Pipeline" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+
+                <!-- ═══════════════════════════════════════════════════════════════════
+                     ROW 1: 3-Column Telemetry & Architecture Cards
+                     ═══════════════════════════════════════════════════════════════════ -->
+                <Grid Grid.Row="1" ColumnDefinitions="*, *, *" ColumnSpacing="12" ClipToBounds="True">
+
+                    <!-- Card 1: Workload Architecture -->
+                    <Border Grid.Column="0" Classes="stat-card" Padding="14" ClipToBounds="True">
+                        <Grid RowDefinitions="Auto, Auto, *, Auto" RowSpacing="6">
+                            <Grid Grid.Row="0" ColumnDefinitions="Auto, Auto, *" ColumnSpacing="6">
+                                <ic:SymbolIcon Symbol="Cube" FontSize="14" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" Text="WORKLOAD ARCHITECTURE" FontSize="10" FontWeight="Bold" LetterSpacing="0.5"
+                                           Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="2" Text="From Settings" FontSize="10"
+                                           Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                            </Grid>
+
+                            <Grid Grid.Row="1" ColumnDefinitions="*, Auto" ColumnSpacing="8" VerticalAlignment="Center" Margin="0,2">
+                                <TextBlock Text="Docker Stack" IsVisible="{Binding IsDockerized}" FontSize="18" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Text="Direct Host Process" IsVisible="{Binding !IsDockerized}" FontSize="18" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+                                <Border Grid.Column="1" Background="{DynamicResource MetricBadgeBackgroundBrush}"
+                                        BorderBrush="{DynamicResource MetricBadgeBorderBrush}" BorderThickness="1"
+                                        CornerRadius="6" Padding="6,2" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding IsDockerized, Converter={x:Null}, FallbackValue='🐳 Docker'}"
+                                               FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource AccentTeal}"/>
+                                </Border>
+                            </Grid>
+
+                            <!-- Architecture Detail -->
+                            <Border Grid.Row="2" Background="{DynamicResource PanelBrush}" CornerRadius="6" Padding="8,6" Margin="0,2">
+                                <StackPanel Spacing="3">
+                                    <TextBlock Text="Compose Orchestration File:" IsVisible="{Binding IsDockerized}" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    <TextBlock Text="{Binding ComposeFileName}" IsVisible="{Binding IsDockerized}" FontSize="11" FontFamily="Cascadia Mono, Consolas, Monospace" Foreground="{DynamicResource TextPrimaryBrush}"/>
+
+                                    <TextBlock Text="Host Launch Command / Script:" IsVisible="{Binding !IsDockerized}" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    <TextBox Text="{Binding LaunchCommand}" IsVisible="{Binding !IsDockerized}"
+                                             PlaceholderText="e.g. systemctl restart myapp / ./start.sh"
+                                             FontSize="11" FontFamily="Cascadia Mono, Consolas, Monospace"
+                                             Padding="6,3" Height="26" MinHeight="26" CornerRadius="4"/>
+                                </StackPanel>
+                            </Border>
+
+                            <Grid Grid.Row="3" ColumnDefinitions="*, Auto">
+                                <TextBlock Text="{Binding SelectedDbEngine, StringFormat='Database: {0}'}" FontSize="10"
+                                           Foreground="{DynamicResource TextMutedBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" Text="{Binding SelectedHealthCheckType, StringFormat='Probe: {0}'}" FontSize="10" FontWeight="Bold"
+                                           Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Grid>
+                    </Border>
+
+                    <!-- Card 2: Workspace Paths -->
+                    <Border Grid.Column="1" Classes="stat-card" Padding="14" ClipToBounds="True">
+                        <Grid RowDefinitions="Auto, Auto, *, Auto" RowSpacing="6">
+                            <Grid Grid.Row="0" ColumnDefinitions="Auto, Auto, *" ColumnSpacing="6">
+                                <ic:SymbolIcon Symbol="Folder" FontSize="14" Foreground="{DynamicResource MetricCpuWaveBrush}" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" Text="DEPLOYMENT TARGETS" FontSize="10" FontWeight="Bold" LetterSpacing="0.5"
+                                           Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="2" Text="Synchronized" FontSize="10"
+                                           Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                            </Grid>
+
+                            <Grid Grid.Row="1" ColumnDefinitions="*, Auto" ColumnSpacing="8" VerticalAlignment="Center" Margin="0,2">
+                                <TextBlock Text="{Binding RemoteProjectPath}" FontSize="14" FontWeight="Bold"
+                                           FontFamily="Cascadia Mono, Consolas, Monospace"
+                                           Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+                                <Border Grid.Column="1" Background="{DynamicResource MetricBadgeBackgroundBrush}"
+                                        BorderBrush="{DynamicResource MetricBadgeBorderBrush}" BorderThickness="1"
+                                        CornerRadius="6" Padding="6,2" VerticalAlignment="Center">
+                                    <TextBlock Text="Target VPS" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource MetricCpuWaveBrush}"/>
+                                </Border>
+                            </Grid>
+
+                            <Border Grid.Row="2" Background="{DynamicResource PanelBrush}" CornerRadius="6" Padding="8,6" Margin="0,2">
+                                <StackPanel Spacing="2">
+                                    <TextBlock Text="Local Project Workspace:" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    <TextBlock Text="{Binding LocalRootPath, FallbackValue='Not configured (set in Settings)'}"
+                                               FontSize="11" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                </StackPanel>
+                            </Border>
+
+                            <Grid Grid.Row="3" ColumnDefinitions="*, Auto">
+                                <TextBlock Text="SFTP / rsync transfer" FontSize="10"
+                                           Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" Text="Encrypted SSH" FontSize="10" FontWeight="Bold"
+                                           Foreground="{DynamicResource MetricCpuWaveBrush}" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Grid>
+                    </Border>
+
+                    <!-- Card 3: Safety Gates & Pipeline State -->
+                    <Border Grid.Column="2" Classes="stat-card" Padding="14" ClipToBounds="True">
+                        <Grid RowDefinitions="Auto, Auto, *, Auto" RowSpacing="6">
+                            <Grid Grid.Row="0" ColumnDefinitions="Auto, Auto, *" ColumnSpacing="6">
+                                <ic:SymbolIcon Symbol="ShieldCheckmark" FontSize="14" Foreground="{DynamicResource MetricDiskOrchidBrush}" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" Text="PIPELINE SAFETY GATES" FontSize="10" FontWeight="Bold" LetterSpacing="0.5"
+                                           Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="2" Text="{Binding OverallStatus}" FontSize="10" FontWeight="Bold"
+                                           Foreground="{DynamicResource MetricDiskOrchidBrush}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                            </Grid>
+
+                            <Grid Grid.Row="1" ColumnDefinitions="*, Auto" ColumnSpacing="8" VerticalAlignment="Center" Margin="0,2">
+                                <TextBlock Text="{Binding OverallStatus, StringFormat='{}Status: {0}'}" FontSize="16" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+                                <Border Grid.Column="1" Background="{DynamicResource MetricBadgeBackgroundBrush}"
+                                        BorderBrush="{DynamicResource MetricBadgeBorderBrush}" BorderThickness="1"
+                                        CornerRadius="6" Padding="6,2" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding TotalDuration, StringFormat='{}{0:mm\\:ss}'}" FontSize="10" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                </Border>
+                            </Grid>
+
+                            <Border Grid.Row="2" Background="{DynamicResource PanelBrush}" CornerRadius="6" Padding="8,4" Margin="0,2">
+                                <StackPanel Spacing="3">
+                                    <CheckBox Content="Skip Database Backup Snapshot" IsChecked="{Binding SkipDatabaseBackup}"
+                                              FontSize="10" Padding="6,0" Margin="0" VerticalAlignment="Center"/>
+                                    <CheckBox Content="Skip Post-Deploy Health Check" IsChecked="{Binding SkipHealthCheck}"
+                                              FontSize="10" Padding="6,0" Margin="0" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+
+                            <Grid Grid.Row="3" ColumnDefinitions="*, Auto">
+                                <TextBlock Text="Rollback on health failure: Enabled" FontSize="10"
+                                           Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" Text="Zero-Downtime" FontSize="10" FontWeight="Bold"
+                                           Foreground="{DynamicResource MetricDiskOrchidBrush}" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <!-- ═══════════════════════════════════════════════════════════════════
+                      ROW 2: Sync Ignore Engine & GUI File/Folder Selector Strip
+                      ═══════════════════════════════════════════════════════════════════ -->
+                <Border Grid.Row="2" Classes="stat-card" Padding="14">
+                    <StackPanel Spacing="10">
+                        <Grid ColumnDefinitions="Auto, Auto, *, Auto" ColumnSpacing="8">
+                            <ic:SymbolIcon Symbol="Filter" FontSize="14" Foreground="{DynamicResource AccentTeal}" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="SYNC IGNORE FILTER (.syncignore)" FontSize="10" FontWeight="Bold" LetterSpacing="0.5"
+                                       Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="2" Text="{Binding SyncIgnoreStatusText}" FontSize="11"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+
+                            <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                <!-- Create Standard template button if no file exists -->
+                                <Button Classes="pill-btn" Command="{Binding CreateStandardSyncIgnoreCommand}" IsVisible="{Binding !HasSyncIgnoreFile}">
+                                    <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                                        <ic:SymbolIcon Symbol="Add" FontSize="12" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Create Standard .syncignore" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <!-- GUI File/Folder Selector Button -->
+                                <Button Classes="action-btn" Command="{Binding OpenSyncIgnoreSelectorCommand}"
+                                        Background="{DynamicResource PanelRaisedBrush}" Foreground="{DynamicResource TextPrimaryBrush}">
+                                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                        <ic:SymbolIcon Symbol="FolderAdd" FontSize="13" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Configure Sync Exclusions (GUI)" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Persistent Media Warning Banner -->
+                        <Border Background="{DynamicResource WarningSurfaceBrush}" BorderBrush="{DynamicResource WarningBorderBrush}"
+                                BorderThickness="1" CornerRadius="8" Padding="12,10" IsVisible="{Binding HasMediaWarning}">
+                            <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="12">
+                                <TextBlock Grid.Column="0" Text="⚠️" FontSize="16" VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                    <TextBlock Text="Persistent Data Warning: Unshielded Folders Detected"
+                                               FontWeight="SemiBold" FontSize="11" Foreground="{DynamicResource WarningTextBrush}"/>
+                                    <TextBlock Text="{Binding MediaWarningText}" FontSize="10"
+                                               Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                                </StackPanel>
+                                <Button Grid.Column="2" Classes="preset-pill" Command="{Binding ProtectDetectedMediaFoldersCommand}"
+                                        Background="{DynamicResource WarningBrush}" Foreground="Black" VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                        <ic:SymbolIcon Symbol="Shield" FontSize="12" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Protect in .syncignore" FontWeight="Bold" FontSize="10" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- ═══════════════════════════════════════════════════════════════════
+                     ROW 3: Startup Command / Script Execution (Host / Container Launch)
+                     ═══════════════════════════════════════════════════════════════════ -->
+                <Border Grid.Row="3" Classes="stat-card" Padding="14">
+                    <Grid RowDefinitions="Auto, Auto, Auto" RowSpacing="10">
+                        <Grid Grid.Row="0" ColumnDefinitions="Auto, Auto, *, Auto" ColumnSpacing="8">
+                            <ic:SymbolIcon Symbol="PlayCircle" FontSize="14" Foreground="{DynamicResource MetricMemoryTealBrush}" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="STARTUP COMMAND / SCRIPT" FontSize="10" FontWeight="Bold" LetterSpacing="0.5"
+                                       Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="2" Text="Post-deployment launch hook"
+                                       FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                            <Border Grid.Column="3" Background="{DynamicResource MetricBadgeBackgroundBrush}"
+                                    BorderBrush="{DynamicResource MetricBadgeBorderBrush}" BorderThickness="1"
+                                    CornerRadius="6" Padding="6,2" VerticalAlignment="Center">
+                                <TextBlock Text="Custom Launch Hook" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource MetricMemoryTealBrush}"/>
+                            </Border>
+                        </Grid>
+
+                        <Grid Grid.Row="1" ColumnDefinitions="*, Auto" ColumnSpacing="10">
+                            <TextBox Text="{Binding LaunchCommand}"
+                                     PlaceholderText="Enter startup command or shell script path (e.g. ./scripts/start.sh, systemctl restart myapp, npm start, python main.py)..."
+                                     FontFamily="Cascadia Mono, Consolas, Courier New, Monospace"
+                                     FontSize="12"
+                                     Padding="10,8"
+                                     CornerRadius="6"/>
+                            <Border Grid.Column="1" Background="{DynamicResource PanelRaisedBrush}" CornerRadius="6" Padding="10,8" VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                                    <ic:SymbolIcon Symbol="Checkmark" FontSize="12" Foreground="{DynamicResource SuccessBrush}" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Auto-Saved" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <Grid Grid.Row="2" ColumnDefinitions="Auto, *" ColumnSpacing="8">
+                            <TextBlock Text="Quick Templates:" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                            <WrapPanel Grid.Column="1" Orientation="Horizontal">
+                                <Button Classes="pill-btn" Content="./start.sh"
+                                        Command="{Binding SetLaunchCommandPresetCommand}"
+                                        CommandParameter="./start.sh"
+                                        FontSize="10" Padding="8,3" Margin="0,0,6,0"/>
+                                <Button Classes="pill-btn" Content="systemctl restart app"
+                                        Command="{Binding SetLaunchCommandPresetCommand}"
+                                        CommandParameter="systemctl restart app"
+                                        FontSize="10" Padding="8,3" Margin="0,0,6,0"/>
+                                <Button Classes="pill-btn" Content="pm2 restart all"
+                                        Command="{Binding SetLaunchCommandPresetCommand}"
+                                        CommandParameter="pm2 restart all"
+                                        FontSize="10" Padding="8,3" Margin="0,0,6,0"/>
+                                <Button Classes="pill-btn" Content="npm run start"
+                                        Command="{Binding SetLaunchCommandPresetCommand}"
+                                        CommandParameter="npm run start"
+                                        FontSize="10" Padding="8,3" Margin="0,0,6,0"/>
+                                <Button Classes="pill-btn" Content="python3 main.py"
+                                        Command="{Binding SetLaunchCommandPresetCommand}"
+                                        CommandParameter="python3 main.py"
+                                        FontSize="10" Padding="8,3"/>
+                            </WrapPanel>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <!-- ═══════════════════════════════════════════════════════════════════
+                     ROW 4: Pipeline Execution Stepper
+                     ═══════════════════════════════════════════════════════════════════ -->
+                <Border Grid.Row="4" Classes="stat-card" Padding="14">
+                    <Grid RowDefinitions="Auto, Auto" RowSpacing="10">
+                        <Grid ColumnDefinitions="Auto, Auto, *, Auto" ColumnSpacing="8">
+                            <ic:SymbolIcon Symbol="ArrowTrendingLines" FontSize="14" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="PIPELINE EXECUTION STEPS" FontSize="10" FontWeight="Bold" LetterSpacing="0.5"
+                                       Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="2" Text="{Binding PipelineSteps.Count, StringFormat='{}{0} Tailored Steps'}"
+                                       FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                            <Border Grid.Column="3" Background="{DynamicResource MetricBadgeBackgroundBrush}"
+                                    BorderBrush="{DynamicResource MetricBadgeBorderBrush}" BorderThickness="1"
+                                    CornerRadius="6" Padding="6,2" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding OverallStatus}" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource AccentTeal}"/>
+                            </Border>
+                        </Grid>
+                        <controls:ProgressStepper Grid.Row="1" Steps="{Binding PipelineSteps}"/>
+                    </Grid>
+                </Border>
+
+                <!-- ═══════════════════════════════════════════════════════════════════
+                     ROW 5: Pipeline Log Console
+                     ═══════════════════════════════════════════════════════════════════ -->
+                <Border Grid.Row="5" Classes="stat-card" Padding="0" ClipToBounds="True" MinHeight="260">
+                    <Grid RowDefinitions="Auto, *">
+                        <!-- Console Header -->
+                        <Border Grid.Row="0" Background="{DynamicResource PanelRaisedBrush}" Padding="14,8"
+                                BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1">
+                            <Grid ColumnDefinitions="Auto, Auto, *, Auto" ColumnSpacing="8">
+                                <ic:SymbolIcon Symbol="DeveloperBoard" FontSize="14" Foreground="{DynamicResource AccentTeal}" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" Text="DEPLOYMENT CONSOLE" Foreground="{DynamicResource TextPrimaryBrush}"
+                                           FontSize="10" FontWeight="Bold" LetterSpacing="0.5" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="2" Text="remote-pipeline-stream" Foreground="{DynamicResource TextSecondaryBrush}"
+                                           FontSize="10" FontFamily="Cascadia Mono, Consolas, Monospace" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Button Grid.Column="3" Classes="pill-btn" Content="Clear" Command="{Binding ClearTerminalCommand}"
+                                        Padding="8,2" FontSize="10" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Console Output Window -->
+                        <Border Grid.Row="1" Background="{DynamicResource LogSurfaceBrush}" Padding="12">
+                            <ScrollViewer x:Name="DeployLogScrollViewer" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                                <SelectableTextBlock Text="{Binding TerminalOutput}" 
+                                                     FontFamily="Cascadia Mono, Consolas, Courier New, Monospace" 
+                                                     FontSize="11" 
+                                                     Foreground="{DynamicResource LogTextBrush}" 
+                                                     TextWrapping="Wrap"/>
+                            </ScrollViewer>
+                        </Border>
+                    </Grid>
+                </Border>
+
+            </Grid>
+        </ScrollViewer>
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             MODAL OVERLAY: GUI File & Folder Selector for .syncignore
+             ═══════════════════════════════════════════════════════════════════ -->
+        <Border IsVisible="{Binding IsSyncIgnoreSelectorOpen}"
+                Background="#B0000000"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch">
+            <Border Width="760" MaxHeight="680"
+                    Background="{DynamicResource PanelBrush}"
+                    BorderBrush="{DynamicResource AccentBrush}"
+                    BorderThickness="1"
+                    CornerRadius="10"
+                    BoxShadow="{DynamicResource PanelShadow}"
+                    Padding="20"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center">
+                <Grid RowDefinitions="Auto, Auto, *, Auto" RowSpacing="12">
+
+                    <!-- Modal Header -->
+                    <Grid Grid.Row="0" ColumnDefinitions="*, Auto">
+                        <StackPanel Spacing="3">
+                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <ic:SymbolIcon Symbol="FolderAdd" FontSize="18" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
+                                <TextBlock Text="Sync Ignore File &amp; Folder Selector" FontSize="16" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <TextBlock Text="Check any folder or file to exclude it from VPS deployment and protect persistent remote server data."
+                                       FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        </StackPanel>
+
+                        <!-- Close Button -->
+                        <Button Grid.Column="1" Classes="pill-btn" Command="{Binding CloseSyncIgnoreSelectorCommand}"
+                                VerticalAlignment="Top" Padding="6,4">
+                            <ic:SymbolIcon Symbol="Dismiss" FontSize="14"/>
+                        </Button>
+                    </Grid>
+
+                    <!-- Filter Toolbar & Stats -->
+                    <Grid Grid.Row="1" ColumnDefinitions="*, Auto, Auto, Auto" ColumnSpacing="8" VerticalAlignment="Center">
+                        <!-- Search Box -->
+                        <TextBox Grid.Column="0" Text="{Binding SyncIgnoreFilterQuery}"
+                                 PlaceholderText="Filter workspace tree by name or path..."
+                                 Padding="8,5" FontSize="11" CornerRadius="6"/>
+
+                        <!-- Select All -->
+                        <Button Grid.Column="1" Classes="pill-btn" Command="{Binding SelectAllInTreeCommand}"
+                                IsEnabled="{Binding !IsRawEditorMode}" ToolTip.Tip="Check all items">
+                            <TextBlock Text="Select All" FontSize="10"/>
+                        </Button>
+
+                        <!-- Deselect All -->
+                        <Button Grid.Column="2" Classes="pill-btn" Command="{Binding DeselectAllInTreeCommand}"
+                                IsEnabled="{Binding !IsRawEditorMode}" ToolTip.Tip="Uncheck all items">
+                            <TextBlock Text="Deselect All" FontSize="10"/>
+                        </Button>
+
+                        <!-- Toggle Raw Text Editor -->
+                        <Button Grid.Column="3" Classes="pill-btn" Command="{Binding ToggleRawEditorModeCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <ic:SymbolIcon Symbol="DocumentEdit" FontSize="12" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding IsRawEditorMode, Converter={x:Null}, FallbackValue='Edit Raw .syncignore'}"
+                                           IsVisible="{Binding !IsRawEditorMode}" FontSize="10" VerticalAlignment="Center"/>
+                                <TextBlock Text="Back to Tree View" IsVisible="{Binding IsRawEditorMode}" FontSize="10" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+
+                    <!-- Center View: Tree View or Raw Editor -->
+                    <Grid Grid.Row="2" MinHeight="340">
+
+                        <!-- Scanning Spinner -->
+                        <StackPanel IsVisible="{Binding IsScanningSyncIgnoreTree}"
+                                    HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10">
+                            <ProgressBar IsIndeterminate="True" Width="140" Height="4" Foreground="{DynamicResource AccentBrush}"/>
+                            <TextBlock Text="Scanning workspace directory hierarchy..." FontSize="11"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center"/>
+                        </StackPanel>
+
+                        <!-- Tree View -->
+                        <Border IsVisible="{Binding !IsRawEditorMode}"
+                                Background="{DynamicResource PanelRaisedBrush}"
+                                BorderBrush="{DynamicResource DividerBrush}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="8">
+                            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                                <TreeView ItemsSource="{Binding SyncIgnoreTreeNodes}"
+                                          Background="Transparent"
+                                          SelectionMode="Single">
+                                    <TreeView.ItemTemplate>
+                                        <TreeDataTemplate DataType="{x:Type models:FilePatchNode}" ItemsSource="{Binding Children}">
+                                            <Border IsVisible="{Binding IsVisibleInFilter}" Padding="4,2" CornerRadius="4">
+                                                <Grid ColumnDefinitions="24, Auto, *, Auto" MinHeight="26" ColumnSpacing="6">
+                                                    <!-- Checkbox for Ignore status -->
+                                                    <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected}"
+                                                              HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                              ToolTip.Tip="Checked = Ignored from sync"/>
+
+                                                    <!-- Icon -->
+                                                    <TextBlock Grid.Column="1" Text="📁" FontSize="13"
+                                                               Foreground="{DynamicResource WarningTextBrush}"
+                                                               IsVisible="{Binding IsDirectory}" VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="1" Text="📄" FontSize="13"
+                                                               Foreground="{DynamicResource TextSecondaryBrush}"
+                                                               IsVisible="{Binding !IsDirectory}" VerticalAlignment="Center"/>
+
+                                                    <!-- Path Name -->
+                                                    <TextBlock Grid.Column="2" Text="{Binding Name}"
+                                                               FontSize="12"
+                                                               Foreground="{DynamicResource TextPrimaryBrush}"
+                                                               VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+
+                                                    <!-- Status Badge / File Size -->
+                                                    <Border Grid.Column="3" Background="{DynamicResource MetricBadgeBackgroundBrush}"
+                                                            BorderBrush="{DynamicResource MetricBadgeBorderBrush}" BorderThickness="1"
+                                                            CornerRadius="4" Padding="6,1" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding IsSelected, Converter={x:Null}, FallbackValue='IGNORED'}"
+                                                                   IsVisible="{Binding IsSelected}"
+                                                                   Foreground="{DynamicResource WarningBrush}" FontSize="9" FontWeight="Bold"/>
+                                                    </Border>
+                                                </Grid>
+                                            </Border>
+                                        </TreeDataTemplate>
+                                    </TreeView.ItemTemplate>
+                                </TreeView>
+                            </ScrollViewer>
+                        </Border>
+
+                        <!-- Raw Text Editor View -->
+                        <Border IsVisible="{Binding IsRawEditorMode}"
+                                Background="{DynamicResource LogSurfaceBrush}"
+                                BorderBrush="{DynamicResource DividerBrush}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="10">
+                            <TextBox Text="{Binding RawSyncIgnoreEditorText, Mode=TwoWay}"
+                                     AcceptsReturn="True"
+                                     AcceptsTab="True"
+                                     FontFamily="Cascadia Mono, Consolas, Courier New, Monospace"
+                                     FontSize="11"
+                                     Background="Transparent"
+                                     Foreground="{DynamicResource LogTextBrush}"
+                                     BorderThickness="0"/>
+                        </Border>
+                    </Grid>
+
+                    <!-- Footer: Summary & Save Actions -->
+                    <Grid Grid.Row="3" ColumnDefinitions="*, Auto" ColumnSpacing="12" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding IgnoredDirsCount, StringFormat='{}{0} folders ignored'}"
+                                       FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource WarningBrush}"/>
+                            <TextBlock Text="•" FontSize="11" Foreground="{DynamicResource TextMutedBrush}"/>
+                            <TextBlock Text="{Binding IgnoredFilesCount, StringFormat='{}{0} files ignored'}"
+                                       FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource AccentTeal}"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                            <Button Classes="pill-btn" Command="{Binding CloseSyncIgnoreSelectorCommand}" Content="Cancel"/>
+                            <Button Classes="action-btn" Command="{Binding SaveSyncIgnoreCommand}"
+                                    Background="{DynamicResource AccentStrongBrush}" Foreground="White">
+                                <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                                    <ic:SymbolIcon Symbol="Save" FontSize="13" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Save .syncignore" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+
+                </Grid>
+            </Border>
+        </Border>
+    </Grid>
+</UserControl>

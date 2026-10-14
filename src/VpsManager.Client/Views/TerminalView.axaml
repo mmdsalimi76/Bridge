@@ -1,0 +1,556 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:VpsManager.Client.ViewModels"
+             xmlns:models="using:VpsManager.Core.Models"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             xmlns:terminal="using:VpsManager.Client.Views.Controls"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="850"
+             x:Class="VpsManager.Client.Views.TerminalView"
+             x:DataType="vm:TerminalViewModel"
+             x:Name="Root"
+             Background="{DynamicResource AppSurfaceBrush}">
+
+    <UserControl.Styles>
+        <!-- Category Filter Pills -->
+        <Style Selector="RadioButton.category-pill">
+            <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="8,3"/>
+            <Setter Property="Margin" Value="0,0,4,4"/>
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
+                    <BrushTransition Property="Foreground" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="RadioButton.category-pill:checked">
+            <Setter Property="Background" Value="{DynamicResource AccentSurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+
+        <!-- Command Card Styles -->
+        <Style Selector="Border.cmd-card">
+            <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="12"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Border.cmd-card:pointerover">
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource PanelRaisedBrush}"/>
+        </Style>
+
+        <!-- Connection indicators -->
+        <Style Selector="TextBlock.connected">
+            <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+        </Style>
+        <Style Selector="TextBlock.disconnected">
+            <Setter Property="Foreground" Value="{DynamicResource DangerBrush}"/>
+        </Style>
+
+        <!-- Toolbar Button Styles -->
+        <Style Selector="Button.toolbar-btn">
+            <Setter Property="Background" Value="{DynamicResource PanelRaisedBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.toolbar-btn:pointerover">
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        </Style>
+        <Style Selector="Button.toolbar-btn.active">
+            <Setter Property="Background" Value="{DynamicResource AccentSurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="Auto, *" Margin="20,16,20,14" RowSpacing="12" ClipToBounds="True">
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             ROW 0: Top Header & Control Strip (Responsive 2-Line Layout)
+             ═══════════════════════════════════════════════════════════════════ -->
+        <Grid Grid.Row="0" RowDefinitions="Auto, Auto" RowSpacing="10" ClipToBounds="True">
+
+            <!-- Line 1: Identity, Target Profile, Live Status, and Real-time Telemetry -->
+            <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto" VerticalAlignment="Center">
+
+                <!-- Left: Title + Badges -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                    <TextBlock Text="SSH Terminal" FontSize="20" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+
+                    <!-- Target Profile Badge -->
+                    <Border Background="{DynamicResource PanelRaisedBrush}" BorderBrush="{DynamicResource DividerBrush}"
+                            BorderThickness="1" CornerRadius="6" Padding="8,4" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <TextBlock Text="Target:" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBlock Text="{Binding ProfileName}" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource AccentTeal}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Live SSH Connection Badge -->
+                    <Border Background="{DynamicResource PanelRaisedBrush}" BorderBrush="{DynamicResource DividerBrush}"
+                            BorderThickness="1" CornerRadius="6" Padding="8,4" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <Ellipse Width="7" Height="7" Fill="{DynamicResource SuccessBrush}" IsVisible="{Binding IsConnected}" VerticalAlignment="Center"/>
+                            <Ellipse Width="7" Height="7" Fill="{DynamicResource DangerBrush}" IsVisible="{Binding !IsConnected}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding ConnectionStatusText}" FontSize="10" FontWeight="SemiBold"
+                                       Classes.connected="{Binding IsConnected}"
+                                       Classes.disconnected="{Binding !IsConnected}"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Session State Badge -->
+                    <Border Background="{DynamicResource PanelRaisedBrush}" BorderBrush="{DynamicResource DividerBrush}"
+                            BorderThickness="1" CornerRadius="6" Padding="8,4" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <Ellipse Width="7" Height="7" Fill="{DynamicResource AccentBrush}" IsVisible="{Binding IsSessionActive}" VerticalAlignment="Center"/>
+                            <Ellipse Width="7" Height="7" Fill="{DynamicResource TextMutedBrush}" IsVisible="{Binding !IsSessionActive}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding SessionStateBadgeText}" FontSize="10" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Right: Status Message and Cancellation / Spinner -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding StatusMessage}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
+                               VerticalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="380"/>
+
+                    <!-- Indeterminate Progress Indicator for Running Commands -->
+                    <ProgressBar Width="50" Height="4" VerticalAlignment="Center"
+                                 IsVisible="{Binding IsProcessingCommand}"
+                                 IsIndeterminate="True"
+                                 Foreground="{DynamicResource AccentBrush}"/>
+
+                    <!-- Cancel Button for Running Commands -->
+                    <Button Classes="pill-btn danger" Command="{Binding CancelCommandCommand}"
+                            IsVisible="{Binding IsProcessingCommand}" ToolTip.Tip="Abort active command (Ctrl+C / Escape)"
+                            Padding="8,3" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <ic:SymbolIcon Symbol="Dismiss" FontSize="11" VerticalAlignment="Center"/>
+                            <TextBlock Text="Cancel (Ctrl+C)" FontSize="10" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <!-- Line 2: Session Controls (Left) and Terminal Settings Toolbar (Right) -->
+            <Grid Grid.Row="1" ColumnDefinitions="Auto, *, Auto" VerticalAlignment="Center">
+
+                <!-- Left: Session Activation & Buffer Controls -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <Button Classes="action-btn" Command="{Binding StartSessionCommand}"
+                            IsEnabled="{Binding !IsSessionActive}"
+                            Background="{DynamicResource AccentStrongBrush}" Foreground="White"
+                            ToolTip.Tip="Launch remote terminal session on target VPS">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <ic:SymbolIcon Symbol="Play" FontSize="11" VerticalAlignment="Center"/>
+                            <TextBlock Text="Start Session" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Classes="pill-btn danger" Command="{Binding StopSessionCommand}"
+                            IsEnabled="{Binding IsSessionActive}"
+                            ToolTip.Tip="Terminate active terminal session">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <ic:SymbolIcon Symbol="Stop" FontSize="11" VerticalAlignment="Center"/>
+                            <TextBlock Text="Stop" FontSize="10" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Classes="pill-btn" Command="{Binding ClearTerminalCommand}"
+                            ToolTip.Tip="Clear output buffer (Ctrl+L)">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <ic:SymbolIcon Symbol="Dismiss" FontSize="11" VerticalAlignment="Center"/>
+                            <TextBlock Text="Clear Screen" FontSize="10" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Classes="pill-btn" Command="{Binding CopyTerminalOutputCommand}"
+                            ToolTip.Tip="Copy entire terminal text buffer to clipboard">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <ic:SymbolIcon Symbol="Copy" FontSize="11" VerticalAlignment="Center"/>
+                            <TextBlock Text="Copy All" FontSize="10" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <!-- Right: Terminal Appearance, Font Controls, and Sidebar Toggle -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <!-- Auto-Scroll Toggle -->
+                    <Button Classes="toolbar-btn" Classes.active="{Binding AutoScroll}" Command="{Binding ToggleAutoScrollCommand}"
+                            ToolTip.Tip="Automatically follow terminal output">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <ic:SymbolIcon Symbol="ArrowDown" FontSize="10" VerticalAlignment="Center"/>
+                            <TextBlock Text="Auto-Scroll" FontSize="10" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Word Wrap Toggle -->
+                    <Button Classes="toolbar-btn" Classes.active="{Binding WordWrap}" Command="{Binding ToggleWordWrapCommand}"
+                            ToolTip.Tip="Toggle long line wrapping">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <ic:SymbolIcon Symbol="TextWrap" FontSize="10" VerticalAlignment="Center"/>
+                            <TextBlock Text="Wrap" FontSize="10" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Font Scaling -->
+                    <Border Background="{DynamicResource PanelRaisedBrush}" BorderBrush="{DynamicResource DividerBrush}"
+                            BorderThickness="1" CornerRadius="6" Padding="4,2" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                            <Button Classes="pill-btn" Command="{Binding DecreaseFontSizeCommand}"
+                                    ToolTip.Tip="Decrease font size" Padding="4,2">
+                                <TextBlock Text="A-" FontSize="9" FontWeight="Bold"/>
+                            </Button>
+                            <TextBlock Text="{Binding TerminalFontSize, StringFormat='{}{0:0}pt'}" FontSize="10"
+                                       Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center" Margin="2,0"/>
+                            <Button Classes="pill-btn" Command="{Binding IncreaseFontSizeCommand}"
+                                    ToolTip.Tip="Increase font size" Padding="4,2">
+                                <TextBlock Text="A+" FontSize="9" FontWeight="Bold"/>
+                            </Button>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Snippets Sidebar Toggle -->
+                    <Button Classes="toolbar-btn" Classes.active="{Binding IsSidebarVisible}" Command="{Binding ToggleSidebarCommand}"
+                            ToolTip.Tip="Toggle Command Library sidebar">
+                        <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                            <ic:SymbolIcon Symbol="Navigation" FontSize="10" VerticalAlignment="Center"/>
+                            <TextBlock Text="Snippets" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            <Border Background="{DynamicResource AccentSurfaceBrush}" CornerRadius="8" Padding="5,1">
+                                <TextBlock Text="{Binding SavedCommands.Count}" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}"/>
+                            </Border>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Grid>
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             ROW 1: Main Workspace (Interactive Terminal + Command Library)
+             ═══════════════════════════════════════════════════════════════════ -->
+        <Grid Grid.Row="1" ColumnDefinitions="*, Auto, Auto">
+
+            <!-- Primary Terminal Console -->
+            <Border Grid.Column="0" Classes="glass-card" Padding="0" Background="{DynamicResource LogSurfaceBrush}">
+                <Grid RowDefinitions="Auto, *, Auto">
+
+                    <!-- Terminal Title / Context Bar -->
+                    <Border Grid.Row="0" Background="{DynamicResource PanelRaisedBrush}" Padding="16,10" CornerRadius="8,8,0,0"
+                            BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1">
+                        <Grid ColumnDefinitions="Auto, *, Auto">
+                            <!-- Left: Host & Directory Prompt Representation -->
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                <TextBlock Text="terminal:" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}"/>
+                                <TextBlock Text="{Binding ServerAddress, StringFormat='root@{0}'}"
+                                           FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
+                                           FontFamily="Cascadia Mono, Consolas, monospace"/>
+                                <TextBlock Text=":" FontSize="11" Foreground="{DynamicResource TextMutedBrush}"/>
+                                <TextBlock Text="{Binding WorkingDirectory}"
+                                           FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource AccentTeal}"
+                                           FontFamily="Cascadia Mono, Consolas, monospace"/>
+                            </StackPanel>
+
+                            <!-- Right: Command Running State -->
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <TextBlock Text="Processing command..." FontSize="10" Foreground="{DynamicResource WarningTextBrush}"
+                                           IsVisible="{Binding IsProcessingCommand}" VerticalAlignment="Center"/>
+                                <TextBlock Text="Ready" FontSize="10" Foreground="{DynamicResource TextMutedBrush}"
+                                           IsVisible="{Binding !IsProcessingCommand}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Terminal Output Window (ANSI & VT100 Syntax Colored AvaloniaEdit) -->
+                    <terminal:TerminalViewer Grid.Row="1" x:Name="TerminalViewerControl"
+                                             Text="{Binding TerminalOutput}"
+                                             AutoScroll="{Binding AutoScroll}"
+                                             WordWrap="{Binding WordWrap}"
+                                             TerminalFontSize="{Binding TerminalFontSize}"
+                                             StripAnsiCodes="False"
+                                             ColorizeAnsi="True"
+                                             Padding="14,10"/>
+
+                    <!-- Command Input Bar -->
+                    <Border Grid.Row="2" Background="{DynamicResource PanelBrush}" Padding="14,10"
+                            CornerRadius="0,0,8,8" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0">
+                        <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="10">
+                            <!-- Prompt Glyph -->
+                            <TextBlock Grid.Column="0" Text="$" Foreground="{DynamicResource AccentBrush}"
+                                       FontFamily="Cascadia Mono, Consolas, monospace" FontSize="15" FontWeight="Bold"
+                                       VerticalAlignment="Center"/>
+
+                            <!-- Input Box -->
+                            <TextBox Grid.Column="1" x:Name="CommandInput"
+                                     Text="{Binding CurrentCommand}"
+                                     PlaceholderText="Type a command (Enter to run, Up/Down for history, Esc to abort)..."
+                                     FontFamily="Cascadia Mono, Consolas, monospace" FontSize="12"
+                                     Background="Transparent" BorderThickness="0"
+                                     IsEnabled="{Binding IsSessionActive}"
+                                     KeyDown="OnCommandInputKeyDown"
+                                     VerticalAlignment="Center"/>
+
+                            <!-- Action Button (Run or Cancel) -->
+                            <Button Grid.Column="2" Classes="action-btn"
+                                    Command="{Binding ExecuteCommandCommand}"
+                                    IsEnabled="{Binding IsSessionActive}"
+                                    IsVisible="{Binding !IsProcessingCommand}"
+                                    Background="{DynamicResource AccentStrongBrush}" Foreground="White"
+                                    Padding="18,6" VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <ic:SymbolIcon Symbol="Play" FontSize="11" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Run" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+
+                            <Button Grid.Column="2" Classes="action-btn"
+                                    Command="{Binding CancelCommandCommand}"
+                                    IsVisible="{Binding IsProcessingCommand}"
+                                    Background="{DynamicResource DangerBrush}" Foreground="White"
+                                    Padding="16,6" VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <ic:SymbolIcon Symbol="Dismiss" FontSize="11" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Cancel" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- Column Separator Spacer -->
+            <Border Grid.Column="1" Width="14" IsVisible="{Binding IsSidebarVisible}"/>
+
+            <!-- Command Library Sidebar -->
+            <Border Grid.Column="2" Width="360" Classes="glass-card" Padding="0"
+                    IsVisible="{Binding IsSidebarVisible}">
+                <Grid RowDefinitions="Auto, Auto, Auto, *, Auto">
+
+                    <!-- Sidebar Header Strip -->
+                    <Border Grid.Row="0" Padding="16,12" Background="{DynamicResource PanelRaisedBrush}" CornerRadius="8,8,0,0"
+                            BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1">
+                        <Grid ColumnDefinitions="*, Auto">
+                            <StackPanel Grid.Column="0" Spacing="2">
+                                <TextBlock Text="COMMAND LIBRARY" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}"/>
+                                <TextBlock Text="Curated presets &amp; team snippets" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            </StackPanel>
+                            <Border Grid.Column="1" Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource DividerBrush}"
+                                    BorderThickness="1" CornerRadius="6" Padding="6,2" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding FilteredSavedCommands.Count, StringFormat='{}{0} available'}"
+                                           FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            </Border>
+                        </Grid>
+                    </Border>
+
+                    <!-- Category Filter Chips (WrapPanel, eliminating overlay scrollbar) -->
+                    <Border Grid.Row="1" Padding="12,8,12,4" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1">
+                        <ItemsControl ItemsSource="{Binding AvailableCategories}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <RadioButton Classes="category-pill"
+                                                 Content="{Binding}"
+                                                 GroupName="TerminalCmdCategoryGroup"
+                                                 IsChecked="{Binding $parent[UserControl].((vm:TerminalViewModel)DataContext).SelectedCategory, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={Binding}}"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Border>
+
+                    <!-- Search Filter Box -->
+                    <Border Grid.Row="2" Padding="12,8">
+                        <TextBox Text="{Binding SearchTerm}"
+                                 PlaceholderText="Filter by name, command or description..."
+                                 FontSize="11" Padding="8,6"/>
+                    </Border>
+
+                    <!-- Command Items Scroll Viewer (Compact cards with toggleable description) -->
+                    <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" Padding="12,4,12,12">
+                        <ItemsControl ItemsSource="{Binding FilteredSavedCommands}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="models:SavedCommand">
+                                    <Border Classes="cmd-card">
+                                        <Grid RowDefinitions="Auto, Auto" RowSpacing="6">
+
+                                            <!-- Row 0: Command Name + Action Buttons -->
+                                            <Grid Grid.Row="0" ColumnDefinitions="*, Auto">
+                                                <!-- Command Name (prominent and scannable) -->
+                                                <TextBlock Grid.Column="0" Text="{Binding Name}"
+                                                           FontWeight="Bold" FontSize="11" Foreground="{DynamicResource TextPrimaryBrush}"
+                                                           TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+
+                                                <!-- Quick Actions Strip -->
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                                    <!-- Toggle Description & Details Button -->
+                                                    <Button Classes="pill-btn" Classes.active="{Binding ShowDescription}"
+                                                            Command="{Binding $parent[UserControl].((vm:TerminalViewModel)DataContext).ToggleSnippetDescriptionCommand}"
+                                                            CommandParameter="{Binding}"
+                                                            ToolTip.Tip="Toggle description and snippet details"
+                                                            Padding="5,2" VerticalAlignment="Center">
+                                                        <ic:SymbolIcon Symbol="Info" FontSize="10"/>
+                                                    </Button>
+
+                                                    <!-- Stage into command bar -->
+                                                    <Button Classes="pill-btn"
+                                                            Command="{Binding $parent[UserControl].((vm:TerminalViewModel)DataContext).StageCommandCommand}"
+                                                            CommandParameter="{Binding}"
+                                                            ToolTip.Tip="Insert into command bar"
+                                                            Padding="5,2" VerticalAlignment="Center">
+                                                        <ic:SymbolIcon Symbol="ArrowDown" FontSize="10"/>
+                                                    </Button>
+
+                                                    <!-- Run Immediately -->
+                                                    <Button Classes="action-btn"
+                                                            Command="{Binding $parent[UserControl].((vm:TerminalViewModel)DataContext).RunSavedCommandDirectCommand}"
+                                                            CommandParameter="{Binding}"
+                                                            Background="{DynamicResource AccentStrongBrush}" Foreground="White"
+                                                            ToolTip.Tip="Execute immediately on remote VPS"
+                                                            Padding="7,2" VerticalAlignment="Center">
+                                                        <ic:SymbolIcon Symbol="Play" FontSize="10"/>
+                                                    </Button>
+
+                                                    <!-- Edit Snippet -->
+                                                    <Button Classes="pill-btn"
+                                                            Command="{Binding $parent[UserControl].((vm:TerminalViewModel)DataContext).StartEditSnippetCommand}"
+                                                            CommandParameter="{Binding}"
+                                                            ToolTip.Tip="Edit snippet"
+                                                            Padding="5,2" VerticalAlignment="Center">
+                                                        <ic:SymbolIcon Symbol="Edit" FontSize="10"/>
+                                                    </Button>
+
+                                                    <!-- Delete Snippet -->
+                                                    <Button Classes="pill-btn danger"
+                                                            Command="{Binding $parent[UserControl].((vm:TerminalViewModel)DataContext).DeleteSavedCommandCommand}"
+                                                            CommandParameter="{Binding}"
+                                                            ToolTip.Tip="Remove snippet"
+                                                            Padding="5,2" VerticalAlignment="Center">
+                                                        <ic:SymbolIcon Symbol="Delete" FontSize="10"/>
+                                                    </Button>
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <!-- Row 1: Expandable Details (Description, Category, and Monospace Code) -->
+                                            <StackPanel Grid.Row="1" Spacing="6" IsVisible="{Binding ShowDescription}">
+                                                <!-- Category Badge + Description -->
+                                                <Grid ColumnDefinitions="Auto, *">
+                                                    <Border Grid.Column="0" Background="{DynamicResource PanelRaisedBrush}"
+                                                            BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1"
+                                                            CornerRadius="4" Padding="5,1" Margin="0,0,6,0" VerticalAlignment="Top">
+                                                        <TextBlock Text="{Binding Category}" FontSize="9" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                    </Border>
+                                                    <TextBlock Grid.Column="1" Text="{Binding Description}"
+                                                               Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10"
+                                                               TextWrapping="Wrap" VerticalAlignment="Center"/>
+                                                </Grid>
+
+                                                <!-- Code Snippet -->
+                                                <Border Background="{DynamicResource LogSurfaceBrush}"
+                                                        CornerRadius="4" Padding="8,5" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1">
+                                                    <TextBlock Text="{Binding Command}"
+                                                               Foreground="{DynamicResource LogTextBrush}"
+                                                               FontFamily="Cascadia Mono, Consolas, monospace" FontSize="10"
+                                                               TextWrapping="Wrap"/>
+                                                </Border>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <!-- Row 4: Add New Snippet Form OR Edit Snippet Form -->
+                    <Border Grid.Row="4" Background="{DynamicResource PanelRaisedBrush}" Padding="12" CornerRadius="0,0,8,8"
+                            BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0">
+                        <Grid>
+                            <!-- EDIT SNIPPET FORM -->
+                            <Border IsVisible="{Binding IsEditingSnippet}"
+                                    Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource AccentBrush}"
+                                    BorderThickness="1" CornerRadius="6" Padding="10">
+                                <StackPanel Spacing="6">
+                                    <Grid ColumnDefinitions="*, Auto">
+                                        <TextBlock Text="EDIT SNIPPET" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
+                                        <Button Grid.Column="1" Classes="pill-btn" Command="{Binding CancelEditSnippetCommand}" Padding="4,2">
+                                            <ic:SymbolIcon Symbol="Dismiss" FontSize="10"/>
+                                        </Button>
+                                    </Grid>
+                                    <TextBox Text="{Binding EditCommandName}" PlaceholderText="Name" FontSize="11"/>
+                                    <TextBox Text="{Binding EditCommandText}" PlaceholderText="Command"
+                                             FontFamily="Cascadia Mono, Consolas, monospace" FontSize="11"/>
+                                    <TextBox Text="{Binding EditCommandDescription}" PlaceholderText="Description" FontSize="11"/>
+                                    <ComboBox ItemsSource="{Binding FixedCategories}" SelectedItem="{Binding EditCommandCategory}"
+                                              HorizontalAlignment="Stretch" FontSize="11"/>
+                                    <Grid ColumnDefinitions="*, *">
+                                        <Button Grid.Column="0" Content="Save Changes" Command="{Binding SaveEditSnippetCommand}"
+                                                Classes="action-btn" Background="{DynamicResource AccentStrongBrush}" Foreground="White"
+                                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Padding="0,5" Margin="0,0,3,0"/>
+                                        <Button Grid.Column="1" Content="Cancel" Command="{Binding CancelEditSnippetCommand}"
+                                                Classes="pill-btn" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                                Padding="0,5" Margin="3,0,0,0"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- SAVE NEW SNIPPET FORM -->
+                            <StackPanel Spacing="8" IsVisible="{Binding !IsEditingSnippet}">
+                                <!-- Toggle Header -->
+                                <Button Classes="toolbar-btn" Command="{Binding ToggleNewCommandFormCommand}"
+                                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <ic:SymbolIcon Symbol="Add" FontSize="11" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Save New Snippet" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <!-- Collapsible Form with Fixed Category Dropdown -->
+                                <StackPanel Spacing="6" IsVisible="{Binding IsNewCommandExpanded}">
+                                    <TextBox Text="{Binding NewCommandName}" PlaceholderText="Name (e.g. Purge Docker Logs)" FontSize="11"/>
+                                    <TextBox Text="{Binding NewCommandText}" PlaceholderText="Command (e.g. docker compose down -v)"
+                                             FontFamily="Cascadia Mono, Consolas, monospace" FontSize="11"/>
+                                    <TextBox Text="{Binding NewCommandDescription}" PlaceholderText="Description (optional)" FontSize="11"/>
+                                    <ComboBox ItemsSource="{Binding FixedCategories}" SelectedItem="{Binding NewCommandCategory}"
+                                              HorizontalAlignment="Stretch" FontSize="11"/>
+                                    <Button Content="Save to Library" Command="{Binding SaveNewCommandCommand}"
+                                            HorizontalAlignment="Stretch" Classes="action-btn"
+                                            Background="{DynamicResource AccentStrongBrush}" Foreground="White"
+                                            HorizontalContentAlignment="Center" Padding="0,6"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

@@ -1,0 +1,63 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="560"
+        x:Class="VpsManager.Client.Views.HostKeyTrustWindow"
+        Title="Verify server identity"
+        Width="560" SizeToContent="Height"
+        CanResize="False"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource AppSurfaceBrush}">
+
+    <Grid RowDefinitions="Auto, *, Auto" Margin="22">
+        <StackPanel Grid.Row="0" Spacing="4">
+            <TextBlock Text="Server identity verification" FontSize="18" FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextPrimaryBrush}"/>
+            <TextBlock Text="This server has not been trusted on this machine yet. Compare the fingerprint with your hosting provider before continuing."
+                       FontSize="11" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="1" Spacing="10" Margin="0,16,0,16">
+            <Border x:Name="ChangedKeyWarning" IsVisible="False"
+                    Background="{DynamicResource WarningSurfaceBrush}" BorderBrush="{DynamicResource WarningBrush}" BorderThickness="1"
+                    CornerRadius="6" Padding="12">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="THE KEY HAS CHANGED" FontSize="11" FontWeight="Bold"
+                               Foreground="{DynamicResource WarningBrush}"/>
+                    <TextBlock x:Name="ChangedKeyDetail" FontSize="11" TextWrapping="Wrap"
+                               Foreground="{DynamicResource TextPrimaryBrush}"/>
+                </StackPanel>
+            </Border>
+
+            <Border Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource DividerBrush}"
+                    BorderThickness="1" CornerRadius="8" Padding="14">
+                <Grid RowDefinitions="Auto, Auto, Auto" ColumnDefinitions="120, *" RowSpacing="8" ColumnSpacing="10">
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="SERVER" FontSize="10" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    <TextBlock Grid.Row="0" Grid.Column="1" x:Name="ServerText" FontSize="12"
+                               Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="KEY TYPE" FontSize="10" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    <TextBlock Grid.Row="1" Grid.Column="1" x:Name="AlgorithmText" FontSize="12"
+                               Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="FINGERPRINT" FontSize="10" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    <SelectableTextBlock Grid.Row="2" Grid.Column="1" x:Name="FingerprintText"
+                                         FontFamily="Cascadia Mono, Consolas, Courier New, Monospace"
+                                         FontSize="11" TextWrapping="Wrap"
+                                         Foreground="{DynamicResource AccentBrush}"/>
+                </Grid>
+            </Border>
+        </StackPanel>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+            <Button Content="Reject" Click="OnRejectClick" Padding="16,8" CornerRadius="6"/>
+            <Button Content="Trust this server" Click="OnTrustClick" Padding="16,8" CornerRadius="6"
+                    Background="{DynamicResource AccentStrongBrush}" Foreground="White" FontWeight="SemiBold"/>
+        </StackPanel>
+    </Grid>
+</Window>

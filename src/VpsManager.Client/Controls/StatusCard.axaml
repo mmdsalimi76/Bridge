@@ -1,0 +1,46 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             x:Class="VpsManager.Client.Controls.StatusCard"
+             x:Name="Root">
+
+    <Border Classes="stat-card" Padding="14">
+        <Grid RowDefinitions="Auto, Auto, *, Auto" RowSpacing="6">
+            <Grid Grid.Row="0" ColumnDefinitions="Auto, Auto, *" ColumnSpacing="6">
+                <ic:SymbolIcon Symbol="Info" FontSize="14"
+                               Foreground="{Binding Level, ElementName=Root, Converter={StaticResource BrushForLevelConverter}}"
+                               VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="1" Text="{Binding Header, ElementName=Root}" FontSize="10" FontWeight="Bold"
+                           LetterSpacing="0.5" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="2" Text="{Binding Level, ElementName=Root}" FontSize="10" FontWeight="SemiBold"
+                           Foreground="{Binding Level, ElementName=Root, Converter={StaticResource BrushForLevelConverter}}"
+                           HorizontalAlignment="Right" VerticalAlignment="Center"/>
+            </Grid>
+
+            <Grid Grid.Row="1" ColumnDefinitions="Auto, *, Auto" VerticalAlignment="Center" Margin="0,2">
+                <TextBlock Text="{Binding Headline, ElementName=Root}" FontSize="20" FontWeight="Bold"
+                           TextTrimming="CharacterEllipsis"
+                           Foreground="{Binding Level, ElementName=Root, Converter={StaticResource BrushForLevelConverter}}"/>
+                <Border Grid.Column="2" Background="{DynamicResource MetricBadgeBackgroundBrush}"
+                        BorderBrush="{DynamicResource MetricBadgeBorderBrush}" BorderThickness="1"
+                        CornerRadius="6" Padding="7,2" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Level, ElementName=Root}" FontSize="10" FontWeight="SemiBold"
+                               Foreground="{Binding Level, ElementName=Root, Converter={StaticResource BrushForLevelConverter}}"/>
+                </Border>
+            </Grid>
+
+            <Border Grid.Row="2" Height="44" Margin="0,3,0,3" VerticalAlignment="Center">
+                <TextBlock Text="{Binding Detail, ElementName=Root}" FontSize="11"
+                           TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis"
+                           Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+            </Border>
+
+            <Grid Grid.Row="3" ColumnDefinitions="*, Auto" IsVisible="{Binding HasFooter, ElementName=Root}">
+                <TextBlock Text="{Binding Footer, ElementName=Root}" FontSize="10"
+                           Foreground="{DynamicResource TextMutedBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="1" Text="Status" FontSize="10" FontWeight="Bold"
+                           Foreground="{Binding Level, ElementName=Root, Converter={StaticResource BrushForLevelConverter}}" VerticalAlignment="Center"/>
+            </Grid>
+        </Grid>
+    </Border>
+</UserControl>
