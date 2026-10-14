@@ -12,10 +12,6 @@ Turn any standard Linux or Windows VPS into a self-hosted cloud platform directl
 
 ---
 
-> **Watch the Video Tour**: Experience Bridge in action with the [1080p Full HD Video Introduction (35s)](https://github.com/mmdsalimi76/Bridge/releases/download/v1.0.0/Bridge-Introduction-1080p.mp4) or launch the interactive [HTML Video Showcase](docs/video_showcase.html).
-
----
-
 ## The Pitch
 
 Most deployment tools force you into an unpalatable compromise:
