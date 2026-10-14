@@ -93,3 +93,14 @@ $RECYCLE.BIN/
 # -- Agent & Local Scratch -------------------------------------------
 .freebuff/
 NUL
+
+# -- Internal Planning, AI Agents & Skills --------------------------
+AGENTS.md
+BRIDGE_OVERHAUL_STATUS.md
+FRONTEND_PLAN.md
+PRD_AND_ROADMAP.md
+PRD_CHECKLIST.md
+skills-lock.json
+.agents/
+.claude/
+skills/
