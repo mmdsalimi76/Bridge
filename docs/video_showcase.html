@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bridge Workstation - Official Video Presentation & Feature Showcase</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #070A12;
+      --card-bg: rgba(15, 23, 42, 0.75);
+      --card-border: rgba(56, 189, 248, 0.25);
+      --card-hover: rgba(56, 189, 248, 0.45);
+      --cyan: #38BDF8;
+      --cyan-glow: rgba(14, 165, 233, 0.4);
+      --emerald: #34D399;
+      --purple: #A855F7;
+      --text-main: #F8FAFC;
+      --text-muted: #94A3B8;
+      --font-ui: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(circle at 50% 15%, rgba(14, 165, 233, 0.15) 0%, transparent 60%),
+        radial-gradient(circle at 85% 75%, rgba(99, 102, 241, 0.12) 0%, transparent 50%),
+        radial-gradient(circle at 15% 85%, rgba(16, 185, 129, 0.08) 0%, transparent 50%);
+      color: var(--text-main);
+      font-family: var(--font-ui);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 24px 80px 24px;
+      overflow-x: hidden;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      display: flex;
+      flex-direction: column;
+      gap: 36px;
+    }
+
+    header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 16px;
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 18px;
+      border-radius: 9999px;
+      background: rgba(14, 165, 233, 0.1);
+      border: 1px solid var(--card-border);
+      color: var(--cyan);
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      box-shadow: 0 0 20px rgba(14, 165, 233, 0.2);
+    }
+
+    h1 {
+      font-size: clamp(2.2rem, 4vw, 3.4rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #FFFFFF 30%, #94A3B8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    p.subtitle {
+      font-size: clamp(1rem, 1.8vw, 1.25rem);
+      color: var(--text-muted);
+      max-width: 760px;
+      line-height: 1.6;
+    }
+
+    .video-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 24px 50px rgba(0, 0, 0, 0.6), 0 0 40px var(--cyan-glow);
+      display: flex;
+      flex-direction: column;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .video-card:hover {
+      border-color: var(--card-hover);
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7), 0 0 60px rgba(14, 165, 233, 0.5);
+    }
+
+    .video-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      background: rgba(15, 23, 42, 0.9);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .window-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+    .dot-red { background: #EF4444; }
+    .dot-yellow { background: #F59E0B; }
+    .dot-green { background: #10B981; }
+
+    .video-title {
+      font-size: 0.9rem;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+    }
+
+    .video-meta {
+      font-size: 0.85rem;
+      color: var(--cyan);
+      font-weight: 600;
+    }
+
+    .video-wrapper {
+      position: relative;
+      width: 100%;
+      background: #000;
+      aspect-ratio: 16 / 9;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: contain;
+      border: none;
+      outline: none;
+    }
+
+    .chapters-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      padding: 16px 24px;
+      background: rgba(15, 23, 42, 0.6);
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .chapter-btn {
+      background: rgba(30, 41, 59, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 10px 14px;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      text-align: left;
+      transition: all 0.2s ease;
+      font-family: var(--font-ui);
+    }
+
+    .chapter-btn:hover {
+      background: rgba(14, 165, 233, 0.15);
+      border-color: var(--cyan);
+      color: var(--text-main);
+      transform: translateY(-2px);
+    }
+
+    .chapter-time {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--cyan);
+      font-weight: 600;
+    }
+
+    .chapter-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .actions-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      justify-content: center;
+      margin-top: 10px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 1rem;
+      text-decoration: none;
+      transition: all 0.25s ease;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%);
+      color: #FFFFFF;
+      box-shadow: 0 4px 20px rgba(2, 132, 199, 0.4);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #0EA5E9 0%, #0284C7 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(14, 165, 233, 0.6);
+    }
+
+    .btn-secondary {
+      background: rgba(30, 41, 59, 0.7);
+      color: var(--text-main);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(51, 65, 85, 0.8);
+      border-color: rgba(255, 255, 255, 0.25);
+      transform: translateY(-2px);
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+      margin-top: 20px;
+    }
+
+    .feature-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: transform 0.25s ease, border-color 0.25s ease;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--card-border);
+    }
+
+    .feature-pill {
+      align-self: flex-start;
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .pill-cyan { background: rgba(14, 165, 233, 0.15); color: var(--cyan); border: 1px solid rgba(56, 189, 248, 0.3); }
+    .pill-purple { background: rgba(168, 85, 247, 0.15); color: var(--purple); border: 1px solid rgba(168, 85, 247, 0.3); }
+    .pill-emerald { background: rgba(16, 185, 129, 0.15); color: var(--emerald); border: 1px solid rgba(16, 185, 129, 0.3); }
+
+    .feature-card h3 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #FFFFFF;
+    }
+
+    .feature-card p {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 40px;
+      color: #64748B;
+      font-size: 0.85rem;
+    }
+
+    footer a {
+      color: var(--cyan);
+      text-decoration: none;
+    }
+    footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <div class="badge-pill">Official Introduction Video</div>
+      <h1>Bridge Workstation v1.0.0</h1>
+      <p class="subtitle">
+        Next-Generation VPS Orchestration & Infrastructure Workstation built with .NET 10 and Avalonia. 
+        Watch the high-definition product tour below.
+      </p>
+    </header>
+
+    <div class="video-card">
+      <div class="video-header">
+        <div class="window-controls">
+          <div class="dot dot-red"></div>
+          <div class="dot dot-yellow"></div>
+          <div class="dot dot-green"></div>
+        </div>
+        <div class="video-title">Bridge_Workstation_Introduction.mp4 (1080p Full HD • 30 FPS)</div>
+        <div class="video-meta">H.264 • 35s Tour</div>
+      </div>
+
+      <div class="video-wrapper">
+        <video id="player" controls autoplay muted loop playsinline preload="auto">
+          <source src="Bridge_Workstation_Introduction.mp4" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
+      </div>
+
+      <div class="chapters-grid">
+        <button class="chapter-btn" onclick="jumpTo(0)">
+          <span class="chapter-time">0:00</span>
+          <span class="chapter-label">Brand & Vision</span>
+        </button>
+        <button class="chapter-btn" onclick="jumpTo(5)">
+          <span class="chapter-time">0:05</span>
+          <span class="chapter-label">The Paradigm Shift</span>
+        </button>
+        <button class="chapter-btn" onclick="jumpTo(10)">
+          <span class="chapter-time">0:10</span>
+          <span class="chapter-label">Live Telemetry</span>
+        </button>
+        <button class="chapter-btn" onclick="jumpTo(16.5)">
+          <span class="chapter-time">0:16</span>
+          <span class="chapter-label">1-Click Deployments</span>
+        </button>
+        <button class="chapter-btn" onclick="jumpTo(23)">
+          <span class="chapter-time">0:23</span>
+          <span class="chapter-label">Smart Terminal</span>
+        </button>
+        <button class="chapter-btn" onclick="jumpTo(29)">
+          <span class="chapter-time">0:29</span>
+          <span class="chapter-label">Get Bridge v1.0.0</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="actions-row">
+      <a href="Bridge_Workstation_Introduction.mp4" download class="btn btn-primary">
+        Download 1080p MP4 Video
+      </a>
+      <a href="https://github.com/mmdsalimi76/Bridge/releases/tag/v1.0.0" target="_blank" class="btn btn-secondary">
+        Download Bridge Setup (.exe)
+      </a>
+      <a href="https://github.com/mmdsalimi76/Bridge" target="_blank" class="btn btn-secondary">
+        View on GitHub
+      </a>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-pill pill-cyan">Zero-Lag Telemetry</div>
+        <h3>Real-Time Vitals</h3>
+        <p>Continuous hardware metrics streaming without polling overhead. Track CPU, RAM, Disk I/O and Network bandwidth with sub-second accuracy.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-pill pill-purple">1-Click Catalog</div>
+        <h3>Curated Deployments</h3>
+        <p>One-click production service installations for Docker, Nginx, PostgreSQL, Redis, Portainer, and Caddy with automatic dependency verification.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-pill pill-emerald">Living Memory</div>
+        <h3>Smart SSH Terminal</h3>
+        <p>Persistent command history, multi-tab session workspaces, and instant execution without losing context or switching windows.</p>
+      </div>
+    </div>
+
+    <footer>
+      Bridge Workstation • Designed for modern developers and sysadmins • <a href="https://github.com/mmdsalimi76/Bridge" target="_blank">github.com/mmdsalimi76/Bridge</a>
+    </footer>
+  </div>
+
+  <script>
+    const player = document.getElementById('player');
+    function jumpTo(seconds) {
+      player.currentTime = seconds;
+      player.play();
+    }
+  </script>
+</body>
+</html>

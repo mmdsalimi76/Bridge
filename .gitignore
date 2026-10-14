@@ -104,3 +104,7 @@ skills-lock.json
 .agents/
 .claude/
 skills/
+
+# -- Media & Standalone Binaries -------------------------------------
+*.mp4
+*.dll
